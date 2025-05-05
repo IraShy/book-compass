@@ -36,7 +36,7 @@ router.post("/login", async (req, res) => {
   const { email, password } = req.body;
 
   try {
-    const result = await dbpr.query("SELECT * FROM users WHERE email = $1", [
+    const result = await db.query("SELECT * FROM users WHERE email = $1", [
       email.toLowerCase(),
     ]);
 
