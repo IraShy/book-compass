@@ -29,7 +29,12 @@ router.post("/register", checkCredentialsPresence, async (req, res) => {
 
     res.status(201).json(result.rows[0]);
   } catch (err) {
-    console.error("users/register error:", err);
+    console.log("users/register error:", err);
+    if (err.code === "23505") {
+      // Unique violation (duplicate email)
+      console.log("user register error: email already registered");
+      return res.status(403).json({ error: "Invalid credentials" });
+    }
     res.status(500).json({ error: "User registration failed" });
   }
 });
