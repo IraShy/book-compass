@@ -1,6 +1,8 @@
 const express = require("express");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const validator = require("validator");
+
 const db = require("../../db");
 const {
   authenticateToken,
@@ -15,6 +17,11 @@ const router = express.Router();
 router.post("/register", checkCredentialsPresence, async (req, res) => {
   try {
     const { email, password } = req.body;
+
+    if (!validator.isEmail(email)) {
+      return res.status(401).json({ error: "Invalid email format" });
+    }
+
     const username = req.body.username?.trim() || req.body.email.split("@")[0];
 
     // console.log(email, username, password);
