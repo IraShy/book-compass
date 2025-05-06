@@ -43,6 +43,29 @@ describe("User routes", () => {
       expect(res.body).toHaveProperty("error", "Missing credentials");
     });
 
+    test("invalid email format", async () => {
+      let res = await registerUser({
+        email: "invalidemail.com",
+        password: "password123",
+      });
+      expect(res.statusCode).toBe(401);
+      expect(res.body).toHaveProperty("error", "Invalid email format");
+
+      res = await registerUser({
+        email: "@invalidemail.com",
+        password: "password123",
+      });
+      expect(res.statusCode).toBe(401);
+      expect(res.body).toHaveProperty("error", "Invalid email format");
+
+      res = await registerUser({
+        email: "invalidemail@.com",
+        password: "password123",
+      });
+      expect(res.statusCode).toBe(401);
+      expect(res.body).toHaveProperty("error", "Invalid email format");
+    });
+
     test("missing password", async () => {
       const res = await registerUser({
         email: "testuser2@example.com",
