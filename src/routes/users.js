@@ -2,14 +2,17 @@ const express = require("express");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const db = require("../../db");
-const authenticateToken = require("../middlewares/auth");
+const {
+  authenticateToken,
+  checkCredentialsPresence,
+} = require("../middlewares/auth");
 
 require("dotenv").config();
 
 const router = express.Router();
 
 // Register
-router.post("/register", async (req, res) => {
+router.post("/register", checkCredentialsPresence, async (req, res) => {
   try {
     const { email, password } = req.body;
     const username = req.body.username?.trim() || req.body.email.split("@")[0];
@@ -32,7 +35,7 @@ router.post("/register", async (req, res) => {
 });
 
 // Login
-router.post("/login", async (req, res) => {
+router.post("/login", checkCredentialsPresence, async (req, res) => {
   const { email, password } = req.body;
 
   try {

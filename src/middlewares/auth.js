@@ -14,4 +14,12 @@ function authenticateToken(req, res, next) {
   });
 }
 
-module.exports = authenticateToken;
+const checkCredentialsPresence = (req, res, next) => {
+  if (!req.body.password || !req.body.email) {
+    console.error("checkCredentialsPresence middleware error");
+    return res.status(401).json({ error: "Missing credentials" });
+  }
+  next();
+};
+
+module.exports = { authenticateToken, checkCredentialsPresence };
