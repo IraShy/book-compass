@@ -17,15 +17,15 @@ router.post("/register", checkCredentialsPresence, async (req, res) => {
     const { email, password } = req.body;
     const username = req.body.username?.trim() || req.body.email.split("@")[0];
 
-    console.log(email, username, password);
-    console.log("Connected to DB:", process.env.DATABASE_URL);
+    // console.log(email, username, password);
+    // console.log("Connected to DB:", process.env.DATABASE_URL);
 
     const hashed = await bcrypt.hash(password, 10);
     const result = await db.query(
       "INSERT INTO users (email, username, hashed_password) VALUES ($1, $2, $3) RETURNING id, email, username, created_at",
       [email.toLowerCase(), username, hashed]
     );
-    console.log("result:", result);
+    // console.log("result:", result);
 
     res.status(201).json(result.rows[0]);
   } catch (err) {
@@ -49,10 +49,16 @@ router.post("/login", checkCredentialsPresence, async (req, res) => {
     ]);
 
     const user = result.rows[0];
-    if (!user) return res.status(401).json({ error: "Invalid credentials" });
+    if (!user) {
+      console.log("user login error: account does not exist");
+      return res.status(401).json({ error: "Invalid credentials" });
+    }
 
     const match = await bcrypt.compare(password, user.hashed_password);
-    if (!match) return res.status(401).json({ error: "Invalid credentials" });
+    if (!match) {
+      console.log("user login error: incorrect password");
+      return res.status(401).json({ error: "Invalid credentials" });
+    }
 
     const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, {
       expiresIn: "7d",

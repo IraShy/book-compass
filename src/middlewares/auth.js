@@ -7,7 +7,10 @@ function authenticateToken(req, res, next) {
   if (!token) return res.status(401).json({ error: "Token required" });
 
   jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
-    if (err) return res.status(403).json({ error: "Invalid token" });
+    if (err) {
+      console.error("authenticateToken middleware error:", err);
+      return res.status(403).json({ error: "Invalid token" });
+    }
 
     req.user = user;
     next();
