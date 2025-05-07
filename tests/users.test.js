@@ -44,26 +44,20 @@ describe("User routes", () => {
     });
 
     test("invalid email format", async () => {
-      let res = await registerUser({
-        email: "invalidemail.com",
-        password: "password123",
-      });
-      expect(res.statusCode).toBe(401);
-      expect(res.body).toHaveProperty("error", "Invalid email format");
+      const invalidEmails = [
+        "invalidemail.com",
+        "@invalidemail.com",
+        "invalidemail@.com",
+        "invalidemail@com",
+        "invalid@",
+        "invalid@@example.com",
+      ];
 
-      res = await registerUser({
-        email: "@invalidemail.com",
-        password: "password123",
-      });
-      expect(res.statusCode).toBe(401);
-      expect(res.body).toHaveProperty("error", "Invalid email format");
-
-      res = await registerUser({
-        email: "invalidemail@.com",
-        password: "password123",
-      });
-      expect(res.statusCode).toBe(401);
-      expect(res.body).toHaveProperty("error", "Invalid email format");
+      for (const email of invalidEmails) {
+        const res = await registerUser({ email, password: "password123" });
+        expect(res.statusCode).toBe(401);
+        expect(res.body).toHaveProperty("error", "Invalid email format");
+      }
     });
 
     test("missing password", async () => {
