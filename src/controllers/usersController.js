@@ -73,6 +73,11 @@ async function loginUser(req, res) {
 async function viewUserProfile(req, res) {
   try {
     const userId = req.user.userId;
+
+    if (!userId) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+
     const result = await db.query("SELECT username FROM users WHERE id = $1", [
       userId,
     ]);
