@@ -1,5 +1,6 @@
 CREATE TABLE books (
   id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  google_books_id TEXT UNIQUE,
   title TEXT NOT NULL,
   authors TEXT[],
   description TEXT,
