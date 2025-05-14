@@ -1,20 +1,26 @@
 /**
- * Middleware to decode and validate book title from request
+ * Middleware to decode and validate book search parameters
  */
-function decodeTitle(req, res, next) {
+function decodeSearchParams(req, res, next) {
   try {
     const rawTitle = req.query.title;
+    const rawAuthor = req.query.author;
 
     if (!rawTitle) {
       return res.status(400).json({ error: "Title is required" });
     }
 
     req.decodedTitle = decodeURIComponent(rawTitle).trim();
+
+    if (rawAuthor) {
+      req.decodedAuthor = decodeURIComponent(rawAuthor).trim();
+    }
+
     next();
   } catch (err) {
-    console.error("Title decoding error:", err);
-    return res.status(400).json({ error: "Malformed title parameter" });
+    console.error("Parameter decoding error:", err);
+    return res.status(400).json({ error: "Malformed search parameters" });
   }
 }
 
-module.exports = { decodeTitle };
+module.exports = { decodeSearchParams };

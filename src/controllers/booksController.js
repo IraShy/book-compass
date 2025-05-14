@@ -6,21 +6,31 @@ const fetchBookFromGoogle = require("../utils/fetchBookFromGoogle");
  */
 async function findOrAddBook(req, res) {
   try {
-    const { title, author } = req.query;
     let book;
 
-    // 1. Check by title in the db
-    const localResult = await db.query(
-      `SELECT * FROM books WHERE LOWER(title) = LOWER($1) LIMIT 1`,
-      [req.decodedTitle]
-    );
+    // 1. Check by title and author (if provided) in the db
+    let query = `SELECT * FROM books WHERE LOWER(title) = LOWER($1)`;
+    let params = [req.decodedTitle];
+    
+    // Add author condition if provided, with case-insensitive matching
+    if (req.decodedAuthor) {
+      // Use array_to_string and LOWER to perform case-insensitive search within the authors array
+      query += ` AND EXISTS (
+        SELECT 1 FROM unnest(authors) AS author 
+        WHERE LOWER(author) = LOWER($2)
+      )`;
+      params.push(req.decodedAuthor);
+    }
+    
+    query += ` LIMIT 1`;
+    const localResult = await db.query(query, params);
 
     if (localResult.rows.length > 0) {
       return res.json({ source: "database", book: localResult.rows[0] });
     }
 
     // 2. Fetch from Google Books API
-    book = await fetchBookFromGoogle(title, author);
+    book = await fetchBookFromGoogle(req.decodedTitle, req.decodedAuthor);
 
     if (!book) {
       return res.status(404).json({ error: "Book not found" });
