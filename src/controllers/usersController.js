@@ -8,17 +8,18 @@ require("dotenv").config();
 // Register
 async function registerUser(req, res) {
   try {
-    const { email, password } = req.body;
+    const { email, password, username: rawUsername } = req.body;
 
     if (!validator.isEmail(email)) {
       return res.status(401).json({ error: "Invalid email format" });
     }
 
-    const username = req.body.username?.trim() || req.body.email.split("@")[0];
+    const username = rawUsername?.trim() || email.split("@")[0];
+    const normalizedEmail = email.toLowerCase();
     const hashed = await bcrypt.hash(password, 10);
     const result = await db.query(
       "INSERT INTO users (email, username, hashed_password) VALUES ($1, $2, $3) RETURNING id, email, username, created_at",
-      [email.toLowerCase(), username, hashed]
+      [normalizedEmail, username, hashed]
     );
 
     res.status(201).json(result.rows[0]);
@@ -35,9 +36,9 @@ async function registerUser(req, res) {
 
 // Login
 async function loginUser(req, res) {
-  const { email, password } = req.body;
-
   try {
+    const { email, password } = req.body;
+
     const result = await db.query("SELECT * FROM users WHERE email = $1", [
       email.toLowerCase(),
     ]);
@@ -57,10 +58,11 @@ async function loginUser(req, res) {
     const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, {
       expiresIn: "7d",
     });
+    const { hashed_password, ...userWithoutPassword } = user;
 
     res.json({
       token,
-      user: { id: user.id, email: user.email, username: user.username },
+      user: userWithoutPassword,
     });
   } catch (err) {
     console.error("users/login error:", err);
