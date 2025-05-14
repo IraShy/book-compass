@@ -3,9 +3,11 @@ const app = express();
 
 const db = require("../db");
 const userRoutes = require("./routes/users");
+const booksRoutes = require("./routes/books");
 
 app.use(express.json());
 app.use("/api/users", userRoutes);
+app.use("/api/books", booksRoutes);
 
 // Health check route (for testing server)
 app.get("/api/health", (req, res) => {
