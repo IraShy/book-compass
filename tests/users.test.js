@@ -39,8 +39,8 @@ describe("User routes", () => {
       const res = await registerUser({
         password: "password123",
       });
-      expect(res.statusCode).toBe(401);
-      expect(res.body).toHaveProperty("error", "Missing credentials");
+      expect(res.statusCode).toBe(400);
+      expect(res.body).toHaveProperty("error", "Email is required");
     });
 
     test("invalid email format", async () => {
@@ -64,8 +64,8 @@ describe("User routes", () => {
       const res = await registerUser({
         email: "testuser2@example.com",
       });
-      expect(res.statusCode).toBe(401);
-      expect(res.body).toHaveProperty("error", "Missing credentials");
+      expect(res.statusCode).toBe(400);
+      expect(res.body).toHaveProperty("error", "Password is required");
     });
 
     test("duplicate email", async () => {
