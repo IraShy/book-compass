@@ -12,11 +12,11 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-  env:
-    PORT: 8000
-    DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
-    NODE_ENV: test
-    JWT_SECRET: secret
+    env:
+      PORT: 8000
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
+      NODE_ENV: test
+      JWT_SECRET: secret
 
     # Service containers to run with `test`
     services:
