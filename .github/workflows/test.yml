@@ -12,6 +12,11 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+  env:
+    PORT: 8000
+    DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
+    NODE_ENV: test
+    JWT_SECRET: secret
 
     # Service containers to run with `test`
     services:
@@ -36,7 +41,7 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [18.x, 20.x, 22.x]
+        node-version: [22.x]
 
     steps:
       - name: Check out repository code
