@@ -12,6 +12,10 @@ afterAll(async () => {
   await db.end();
 });
 
+test("if it works", () => {
+  expect(1).toBe(1);
+});
+
 describe("User routes", () => {
   let token;
   describe("POST /register", () => {
