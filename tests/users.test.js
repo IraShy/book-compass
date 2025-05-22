@@ -9,6 +9,7 @@ const loginUser = (data) => request(app).post(`${baseUrl}/login`).send(data);
 
 afterAll(async () => {
   await db.query("DELETE FROM users WHERE email LIKE 'testuser%@example.com';");
+  await db.end();
 });
 
 describe("User routes", () => {

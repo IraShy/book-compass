@@ -11,7 +11,7 @@ async function findOrAddBook(req, res) {
     // 1. Check by title and author (if provided) in the db
     let query = `SELECT * FROM books WHERE LOWER(title) = LOWER($1)`;
     let params = [req.decodedTitle];
-    
+
     // Add author condition if provided, with case-insensitive matching
     if (req.decodedAuthor) {
       // Use array_to_string and LOWER to perform case-insensitive search within the authors array
@@ -21,7 +21,7 @@ async function findOrAddBook(req, res) {
       )`;
       params.push(req.decodedAuthor);
     }
-    
+
     query += ` LIMIT 1`;
     const localResult = await db.query(query, params);
 
