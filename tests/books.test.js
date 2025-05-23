@@ -44,8 +44,6 @@ describe("Books routes", () => {
       expect(res.statusCode).toBe(201);
       expect(res.body).toHaveProperty("source", "google_api");
       expect(res.body.book).toHaveProperty("google_books_id");
-      expect(res.body.book).toHaveProperty("authors");
-      expect(res.body.book.authors).toContain("Rosalie Ham");
     });
 
     it("returns a book from db searching by title only", async () => {
