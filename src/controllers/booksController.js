@@ -1,5 +1,6 @@
 const db = require("../../db");
 const fetchBookFromGoogle = require("../utils/fetchBookFromGoogle");
+const logger = require("../utils/logger");
 
 /**
  * Find a book in the database or add it from Google Books API
@@ -29,10 +30,13 @@ async function findOrAddBook(req, res) {
       return res.json({ source: "database", book: localResult.rows[0] });
     }
 
+    logger.info("Book not found in the db", { params });
+
     // 2. Fetch from Google Books API
     book = await fetchBookFromGoogle(req.decodedTitle, req.decodedAuthor);
 
     if (!book) {
+      logger.info("Book not found in Google Books API", { params });
       return res.status(404).json({ error: "Book not found" });
     }
 
@@ -58,8 +62,6 @@ async function findOrAddBook(req, res) {
       .status(201)
       .json({ source: "google_api", book: insertResult.rows[0] });
   } catch (err) {
-    console.error("Book search/add error:", err);
-
     if (err.code === "23505" && book?.google_books_id) {
       try {
         const fallback = await db.query(
@@ -70,8 +72,10 @@ async function findOrAddBook(req, res) {
           return res.json({ source: "database", book: fallback.rows[0] });
         }
       } catch (fallbackErr) {
-        console.error("Fallback query error:", fallbackErr);
+        logger.error("Fallback query error:", fallbackErr);
       }
+    } else {
+      logger.error("Book search/add error:", err);
     }
 
     return res.status(500).json({ error: "Failed to process book request" });

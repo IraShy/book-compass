@@ -1,3 +1,5 @@
+const logger = require("../utils/logger");
+
 /**
  * Middleware to decode and validate book search parameters
  */
@@ -18,7 +20,7 @@ function decodeSearchParams(req, res, next) {
 
     next();
   } catch (err) {
-    console.error("Parameter decoding error:", err);
+    logger.error("Parameter decoding error:", err);
     return res.status(400).json({ error: "Malformed search parameters" });
   }
 }
