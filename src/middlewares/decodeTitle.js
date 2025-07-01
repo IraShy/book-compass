@@ -9,6 +9,7 @@ function decodeSearchParams(req, res, next) {
     const rawAuthor = req.query.author;
 
     if (!rawTitle) {
+      logger.debug("Book search attempt without title");
       return res.status(400).json({ error: "Title is required" });
     }
 
