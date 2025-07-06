@@ -2,7 +2,6 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const validator = require("validator");
 const db = require("../../db");
-const logger = require("../utils/logger");
 
 require("dotenv").config();
 
@@ -12,7 +11,7 @@ async function registerUser(req, res) {
     const { email, password, username: rawUsername } = req.body;
 
     if (!validator.isEmail(email)) {
-      logger.warn("Invalid email format attempted", { email });
+      req.log.warn("Invalid email format attempted", { email });
       return res.status(401).json({ error: "Invalid email format" });
     }
 
@@ -25,7 +24,7 @@ async function registerUser(req, res) {
       [normalizedEmail, username, hashed]
     );
 
-    logger.info("User registered successfully", {
+    req.log.info("User registered successfully", {
       userId: result.rows[0].id,
       email: normalizedEmail,
       username,
@@ -35,13 +34,13 @@ async function registerUser(req, res) {
   } catch (err) {
     if (err.code === "23505") {
       // Unique violation (duplicate email)
-      logger.warn("Registration attempt with existing email", {
+      req.log.warn("Registration attempt with existing email", {
         email: req.body.email?.toLowerCase(),
       });
       return res.status(403).json({ error: "Invalid credentials" });
     }
 
-    logger.error("User registration failed", {
+    req.log.error("User registration failed", {
       error: err.message,
       email: req.body.email?.toLowerCase(),
     });
@@ -62,7 +61,7 @@ async function loginUser(req, res) {
 
     const user = result.rows[0];
     if (!user) {
-      logger.warn("Login attempt with non-existent email", {
+      req.log.warn("Login attempt with non-existent email", {
         email: normalizedEmail,
       });
       return res.status(401).json({ error: "Invalid credentials" });
@@ -70,7 +69,7 @@ async function loginUser(req, res) {
 
     const match = await bcrypt.compare(password, user.hashed_password);
     if (!match) {
-      logger.warn("Login attempt with incorrect password", {
+      req.log.warn("Login attempt with incorrect password", {
         userId: user.id,
         email: normalizedEmail,
       });
@@ -81,7 +80,7 @@ async function loginUser(req, res) {
       expiresIn: "7d",
     });
 
-    logger.info("User logged in successfully", {
+    req.log.info("User logged in successfully", {
       userId: user.id,
       email: normalizedEmail,
     });
@@ -93,7 +92,7 @@ async function loginUser(req, res) {
       user: userWithoutPassword,
     });
   } catch (err) {
-    logger.error("User login failed", {
+    req.log.error("User login failed", {
       error: err.message,
       email: req.body.email?.toLowerCase(),
     });
@@ -106,7 +105,7 @@ async function viewUserProfile(req, res) {
     const userId = req.user.userId;
 
     if (!userId) {
-      logger.warn("Profile access attempt without authentication");
+      req.log.warn("Profile access attempt without authentication");
       return res.status(401).json({ error: "Authentication required" });
     }
 
@@ -115,16 +114,16 @@ async function viewUserProfile(req, res) {
     ]);
 
     if (result.rows.length === 0) {
-      logger.warn("Profile access attempt for non-existent user", { userId });
+      req.log.warn("Profile access attempt for non-existent user", { userId });
       return res.status(404).json({ error: "User not found" });
     }
 
     const username = result.rows[0].username;
-    logger.debug("User profile accessed", { userId });
+    req.log.debug("User profile accessed", { userId });
 
     res.status(200).json({ userId, username });
   } catch (err) {
-    logger.error("User profile access failed", {
+    req.log.error("User profile access failed", {
       error: err.message,
       userId: req.user?.userId,
     });

@@ -1,5 +1,3 @@
-const logger = require("../utils/logger");
-
 /**
  * Middleware to decode and validate book search parameters
  */
@@ -9,7 +7,7 @@ function decodeSearchParams(req, res, next) {
     const rawAuthor = req.query.author;
 
     if (!rawTitle) {
-      logger.debug("Book search attempt without title");
+      req.log.debug("Book search attempt without title");
       return res.status(400).json({ error: "Title is required" });
     }
 
@@ -21,7 +19,7 @@ function decodeSearchParams(req, res, next) {
 
     next();
   } catch (err) {
-    logger.error("Parameter decoding error:", err);
+    req.log.error("Parameter decoding error", { error: err.message });
     return res.status(400).json({ error: "Malformed search parameters" });
   }
 }
