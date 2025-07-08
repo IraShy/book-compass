@@ -60,6 +60,8 @@ const transports = [
     format: jsonFormat,
     maxsize: maxLogSize,
     maxFiles: maxLogFiles,
+    handleExceptions: true,
+    handleRejections: true,
   }),
   // Combined logs
   new winston.transports.File({
@@ -67,6 +69,8 @@ const transports = [
     format: jsonFormat,
     maxsize: maxLogSize,
     maxFiles: maxLogFiles,
+    handleExceptions: true,
+    handleRejections: true,
   }),
 ];
 
@@ -75,6 +79,8 @@ if (process.env.NODE_ENV === "development") {
   transports.push(
     new winston.transports.Console({
       format: consoleFormat,
+      handleExceptions: true,
+      handleRejections: true,
     })
   );
 }
@@ -84,7 +90,6 @@ const logger = winston.createLogger({
   level: logLevel,
   defaultMeta: { service: "book-compass-api" },
   transports: transports,
-  exitOnError: false,
 });
 
 // Silence logs in test environment
