@@ -138,4 +138,4 @@ async function fetchBookFromGoogle(title, author = "") {
   }
 }
 
-module.exports = fetchBookFromGoogle;
+module.exports = { fetchBookFromGoogle };

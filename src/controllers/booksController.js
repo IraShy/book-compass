@@ -1,5 +1,5 @@
 const db = require("../../db");
-const fetchBookFromGoogle = require("../utils/fetchBookFromGoogle");
+const { fetchBookFromGoogle } = require("../services/bookService");
 
 /**
  * Find a book in the database or add it from Google Books API
