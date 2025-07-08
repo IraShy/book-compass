@@ -7,6 +7,7 @@ function decodeSearchParams(req, res, next) {
     const rawAuthor = req.query.author;
 
     if (!rawTitle) {
+      req.log.debug("Book search attempt without title");
       return res.status(400).json({ error: "Title is required" });
     }
 
@@ -18,7 +19,7 @@ function decodeSearchParams(req, res, next) {
 
     next();
   } catch (err) {
-    console.error("Parameter decoding error:", err);
+    req.log.error("Parameter decoding error", { error: err.message });
     return res.status(400).json({ error: "Malformed search parameters" });
   }
 }
