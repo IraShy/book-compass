@@ -2,7 +2,7 @@ const express = require("express");
 const app = express();
 
 const db = require("../db");
-const userRoutes = require("./routes/users");
+const usersRoutes = require("./routes/users");
 const booksRoutes = require("./routes/books");
 const { requestLogger } = require("./middlewares/requestLogger");
 
@@ -10,7 +10,7 @@ app.use(express.json());
 
 app.use(requestLogger);
 
-app.use("/api/users", userRoutes);
+app.use("/api/users", usersRoutes);
 app.use("/api/books", booksRoutes);
 
 // Health check route (for testing server)
