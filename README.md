@@ -7,17 +7,19 @@
 - [Running the Project](#running-the-project)
 - [Testing](#testing)
 - [Available Endpoints](#available-endpoints)
-- [Project Structure](#project-structure)
-- [Environment Variables](#environment-variables)
 
 ## Prerequisites
+
+- Docker
+
+or:
 
 - Node.js (v22 or higher)
 - PostgreSQL (v12 or higher)
 
 ## Setup
 
-### 1. Environment Configuration
+#### Environment Configuration
 
 Copy the sample environment file and configure your settings:
 
@@ -34,7 +36,16 @@ NODE_ENV=development
 JWT_SECRET="your-secure-jwt-secret-here"
 ```
 
-### 2. Database Setup
+<strong>Docker</strong>
+
+```bash
+docker compose up
+```
+
+<details>
+<summary><strong>Local Development</strong></summary>
+
+#### Database Setup
 
 1. Make sure PostgreSQL is installed and running on your local machine.
 2. Make the setup script executable:
@@ -56,15 +67,45 @@ The setup script will:
 - Grant the user full privileges on the database
 - Initialise the database schema
 
-### 3. Install Dependencies
+#### Install Dependencies
 
 ```bash
 npm install
 ```
 
+</details>
+
 ## Running the Project
 
-### Development Mode
+### Docker
+
+```bash
+docker compose up
+```
+
+<details>
+<summary><strong>Additional Docker Commands</strong></summary>
+
+```bash
+# Start services
+docker compose up
+
+# Stop services
+docker compose down
+
+# Rebuild
+docker compose up --build
+
+# Remove containers and volumes (fresh start)
+docker compose down --volumes
+
+# Remove everything (nuclear option)
+docker system prune -a --volumes
+```
+
+</details>
+
+### Local
 
 ```bash
 npm run dev
@@ -87,6 +128,8 @@ Copy the test environment file:
 cp .env.test_sample .env.test
 ```
 
+Update the `.env.test` file with your configuration.
+
 The setup.sh script creates both dev AND test databases, so no additional database setup is needed for testing.
 
 ### Run Tests
@@ -103,28 +146,3 @@ npm test
 - `GET /api/books/find` - Find or add a book
 - `GET /api/health` - Health check
 - `GET /ping-db` - Database connection test
-
-## Project Structure
-
-```
-src/
-├── controllers/     # Request handlers
-├── middlewares/     # Custom middleware
-├── routes/         # Route definitions
-├── services/       # Business logic
-└── utils/          # Utility functions
-db/
-├── index.js        # Database connection
-├── schema.sql      # Database schema
-└── setup.sh        # Database setup script
-tests/              # Test files
-```
-
-## Environment Variables
-
-| Variable       | Description                  | Default                                                                    |
-| -------------- | ---------------------------- | -------------------------------------------------------------------------- |
-| `PORT`         | Server port                  | 8000                                                                       |
-| `DATABASE_URL` | PostgreSQL connection string | `postgres://bookuser:bookpassword@localhost:5432/book_compass_dev` (local) |
-| `NODE_ENV`     | Environment mode             | development                                                                |
-| `JWT_SECRET`   | JWT signing secret           | -                                                                          |
