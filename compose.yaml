@@ -12,7 +12,9 @@ services:
     build:
       context: .
     environment:
-      NODE_ENV: production
+      NODE_ENV: development
+      DATABASE_URL: postgres://bookuser:bookpassword@db:5432/book_compass_dev
+      JWT_SECRET: your-secure-jwt-secret-here
     ports:
       - 8000:8000
 
@@ -26,25 +28,21 @@ services:
       db:
         condition: service_healthy
   db:
-    image: postgres
+    image: postgres:14
     restart: always
-    user: postgres
-    secrets:
-      - db-password
     volumes:
       - db-data:/var/lib/postgresql/data
+      - ./db/schema.sql:/docker-entrypoint-initdb.d/schema.sql
     environment:
-      - POSTGRES_DB=example
-      - POSTGRES_PASSWORD_FILE=/run/secrets/db-password
+      - POSTGRES_USER=bookuser
+      - POSTGRES_PASSWORD=bookpassword
+      - POSTGRES_DB=book_compass_dev
     expose:
       - 5432
     healthcheck:
-      test: ["CMD", "pg_isready"]
+      test: ["CMD", "pg_isready", "-U", "bookuser", "-d", "book_compass_dev"]
       interval: 10s
       timeout: 5s
       retries: 5
 volumes:
   db-data:
-secrets:
-  db-password:
-    file: db/password.txt
