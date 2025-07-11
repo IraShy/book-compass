@@ -13,6 +13,10 @@ if (!fs.existsSync(logDir)) {
 
 const logLevel = process.env.NODE_ENV === "production" ? "info" : "debug";
 
+const getUTCTimestamp = () => {
+  return new Date().toISOString().replace("T", " ").substring(0, 19);
+};
+
 // Custom JSON format with ordered keys
 const orderedJsonFormat = winston.format.printf((info) => {
   const { timestamp, level, message, service, ...meta } = info;
@@ -33,14 +37,14 @@ const orderedJsonFormat = winston.format.printf((info) => {
 
 // JSON format for file logs with custom ordering
 const jsonFormat = winston.format.combine(
-  winston.format.timestamp({ format: "YYYY-MM-DD HH:mm:ss" }),
+  winston.format.timestamp({ format: getUTCTimestamp }),
   winston.format.errors({ stack: true }),
   orderedJsonFormat
 );
 
 const consoleFormat = winston.format.combine(
   winston.format.colorize(),
-  winston.format.timestamp({ format: "HH:mm:ss" }),
+  winston.format.timestamp({ format: getUTCTimestamp }),
   winston.format.printf(({ timestamp, level, message, service, ...meta }) => {
     let msg = `${timestamp} [${level}]: ${message}`;
 
