@@ -12,6 +12,7 @@ if (!fs.existsSync(logDir)) {
 }
 
 const logLevel = process.env.NODE_ENV === "production" ? "info" : "debug";
+const consoleLogLevel = process.env.NODE_ENV === "production" ? "warn" : "debug";
 
 const getUTCTimestamp = () => {
   return new Date().toISOString().replace("T", " ").substring(0, 19);
@@ -78,10 +79,11 @@ const transports = [
   }),
 ];
 
-// Add console transport only in development
-if (process.env.NODE_ENV === "development") {
+// Add console transport for development and production
+if (process.env.NODE_ENV !== "test") {
   transports.push(
     new winston.transports.Console({
+      level: consoleLogLevel,
       format: consoleFormat,
       handleExceptions: true,
       handleRejections: true,
