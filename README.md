@@ -4,22 +4,29 @@ A RESTful API for book discovery and review management, built with Node.js and d
 
 ## Table of Contents
 
-- [Live Demo](#live-demo)
+- [Live Demo](#links)
+- [Available Endpoints](#available-endpoints)
 - [Tech Stack](#tech-stack)
 - [Prerequisites](#prerequisites)
 - [Setup](#setup)
 - [Running the Project](#running-the-project)
 - [Testing](#testing)
-- [Available Endpoints](#available-endpoints)
 
-## Live Demo
+## Links
 
-🚀 **API Base URL:** https://book-compass.onrender.com
+🚀 **API Base URL:** https://book-compass.onrender.com/api
 
 **Quick Test:**
 
 - Health Check: [https://book-compass.onrender.com/api/health](https://book-compass.onrender.com/api/health)
 - Database Status: [https://book-compass.onrender.com/ping-db](https://book-compass.onrender.com/ping-db)
+
+## Available Endpoints
+
+- `POST /users/register` - Register a new user
+- `POST /users/login` - User login
+- `GET /users/profile` - Get user profile
+- `GET /books/find` - Find or add a book
 
 ## Tech Stack
 
@@ -171,12 +178,3 @@ The setup.sh script creates both dev AND test databases, so no additional databa
 ```bash
 npm test
 ```
-
-## Available Endpoints
-
-- `POST /api/users/register` - Register a new user
-- `POST /api/users/login` - User login
-- `GET /api/users/profile` - Get user profile
-- `GET /api/books/find` - Find or add a book
-- `GET /api/health` - Health check
-- `GET /ping-db` - Database connection test
