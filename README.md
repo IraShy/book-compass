@@ -1,12 +1,40 @@
 # Book Compass Backend
 
+A RESTful API for book discovery and review management, built with Node.js and deployed on Render.
+
 ## Table of Contents
 
+- [Live Demo](#live-demo)
+- [Tech Stack](#tech-stack)
 - [Prerequisites](#prerequisites)
 - [Setup](#setup)
 - [Running the Project](#running-the-project)
 - [Testing](#testing)
 - [Available Endpoints](#available-endpoints)
+
+## Live Demo
+
+🚀 **API Base URL:** https://book-compass.onrender.com
+
+**Quick Test:**
+
+- Health Check: [https://book-compass.onrender.com/api/health](https://book-compass.onrender.com/api/health)
+- Database Status: [https://book-compass.onrender.com/ping-db](https://book-compass.onrender.com/ping-db)
+
+## Tech Stack
+
+**Backend:**
+
+- Node.js 23.7.0 with Express.js
+- PostgreSQL with Supabase
+- JWT authentication
+- Winston logging
+- Jest testing framework
+
+**DevOps:**
+
+- Docker containerisation
+- CI/CD pipeline with GitHub Actions and Render
 
 ## Prerequisites
 
@@ -31,9 +59,15 @@ Update the `.env` file with your configuration:
 
 ```bash
 PORT=8000
-DATABASE_URL=postgres://bookuser:bookpassword@localhost:5432/book_compass_dev
 NODE_ENV=development
-JWT_SECRET="your-secure-jwt-secret-here"
+JWT_SECRET=<your-secure-jwt-secret>
+
+# Database configuration
+DB_USER=<your-database-user>
+DB_PASSWORD=<your-database-password>
+DB_HOST=<your-database-host>
+DB_PORT=5432
+DB_NAME=<your-database-name>
 ```
 
 <strong>Docker</strong>
