@@ -15,7 +15,6 @@ services:
       - .env
     environment:
       NODE_ENV: development
-      DATABASE_URL: postgres://bookuser:bookpassword@db:5432/book_compass_dev
     ports:
       - 8000:8000
     volumes:

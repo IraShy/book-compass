@@ -24,13 +24,26 @@ app.get("/api/health", (req, res) => {
 app.get("/ping-db", async (req, res) => {
   try {
     const result = await db.query("SELECT CURRENT_USER, CURRENT_DATABASE();");
+    const tableTest = await db.query(
+      "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public';"
+    );
+
     req.log.info("Database connection test successful");
-    res.json({ success: true, result: result.rows[0] });
+    res.json({
+      success: true,
+      connection: result.rows[0],
+      tables: tableTest.rows.map((row) => row.table_name),
+    });
   } catch (error) {
-    req.log.error("Database connection test failed", { error: error.message });
-    res
-      .status(500)
-      .json({ success: false, error: "Database connection failed" });
+    req.log.error("Database connection test failed", {
+      error: error.message,
+      stack: error.stack,
+    });
+    res.status(500).json({
+      success: false,
+      error: "Database connection failed",
+      details: error.message,
+    });
   }
 });
 
