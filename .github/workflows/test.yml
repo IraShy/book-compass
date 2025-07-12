@@ -14,7 +14,12 @@ jobs:
     runs-on: ubuntu-latest
     env:
       PORT: 8000
-      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
+      # DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
+      DB_USER: bookuser
+      DB_PASSWORD: bookpassword
+      DB_HOST: localhost
+      DB_PORT: 5432
+      DB_NAME: book_compass_test
       NODE_ENV: test
       JWT_SECRET: secret
 
@@ -26,9 +31,9 @@ jobs:
         image: postgres:14
         # Provide the password for postgres
         env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: test_db
+          POSTGRES_USER: bookuser
+          POSTGRES_PASSWORD: bookpassword
+          POSTGRES_DB: book_compass_test
         # Set health checks to wait until postgres has started
         options: >-
           --health-cmd pg_isready
@@ -59,7 +64,7 @@ jobs:
       - name: Create schema
         # Runs a script that creates a PostgreSQL table, populates
         # the table with data, and then retrieves the data
-        run: psql postgresql://postgres:postgres@localhost:5432/test_db -f db/schema.sql
+        run: psql postgresql://bookuser:bookpassword@localhost:5432/book_compass_test -f db/schema.sql
 
       - name: Run tests
         run: npm test
