@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       PORT: 8000
-      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
+      DATABASE_URL: postgresql://bookuser:bookpassword@localhost:5432/book_compass_test
       # DB_USER: bookuser
       # DB_PASSWORD: bookpassword
       # DB_HOST: localhost
