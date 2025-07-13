@@ -95,6 +95,7 @@ async function loginUser(req, res) {
     req.log.error("User login failed", {
       error: err.message,
       email: req.body.email?.toLowerCase(),
+      stack: err.stack,
     });
     res.status(500).json({ error: "Login failed" });
   }
