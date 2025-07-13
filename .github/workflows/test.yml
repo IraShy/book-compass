@@ -20,8 +20,8 @@ jobs:
       # DB_HOST: localhost
       # DB_PORT: 5432
       # DB_NAME: book_compass_test
-      # NODE_ENV: test
-      # JWT_SECRET: secret
+      NODE_ENV: test
+      JWT_SECRET: secret
 
     # Service containers to run with `test`
     services:
