@@ -1,10 +1,12 @@
 # Book Compass Backend
 
+> ⚠️ **Work in Progress** - This project is currently under active development. Features are incomplete and may not function as expected. Please check back later for a stable release.
+
 A RESTful API for book discovery and review management, built with Node.js and deployed on Render.
 
 ## Table of Contents
 
-- [Live Demo](#links)
+- [Links](#links)
 - [Available Endpoints](#available-endpoints)
 - [Tech Stack](#tech-stack)
 - [Prerequisites](#prerequisites)
@@ -14,7 +16,7 @@ A RESTful API for book discovery and review management, built with Node.js and d
 
 ## Links
 
-🚀 **API Base URL:** https://book-compass.onrender.com/api
+**API Base URL:** https://book-compass.onrender.com/api
 
 **Quick Test:**
 
@@ -68,13 +70,7 @@ Update the `.env` file with your configuration:
 PORT=8000
 NODE_ENV=development
 JWT_SECRET=<your-secure-jwt-secret>
-
-# Database configuration
-DB_USER=<your-database-user>
-DB_PASSWORD=<your-database-password>
-DB_HOST=<your-database-host>
-DB_PORT=5432
-DB_NAME=<your-database-name>
+DATABASE_URL=postgres://bookuser:bookpassword@localhost:5432/book_compass_dev
 ```
 
 <strong>Docker</strong>
