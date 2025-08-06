@@ -106,9 +106,17 @@ async function loginUser(req, res) {
 }
 
 async function logoutUser(req, res) {
-  res.clearCookie("authToken");
-  req.log.info("User logged out successfully", { userId: req.user?.userId });
-  res.status(200).json({ message: "Logged out successfully" });
+  try {
+    res.clearCookie("authToken");
+    req.log.info("User logged out successfully", { userId: req.user?.userId });
+    res.status(200).json({ message: "Logged out successfully" });
+  } catch (err) {
+    req.log.warn("Logout failed", {
+      error: err.message,
+      userId: req.user?.userId,
+      stack: err.stack,
+    });
+  }
 }
 
 async function viewUserProfile(req, res) {
