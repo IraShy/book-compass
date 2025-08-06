@@ -9,6 +9,7 @@ const {
   registerUser,
   loginUser,
   viewUserProfile,
+  logoutUser,
 } = require("../controllers/usersController");
 
 const router = express.Router();
@@ -16,6 +17,8 @@ const router = express.Router();
 router.post("/register", checkCredentialsPresence, registerUser);
 
 router.post("/login", checkCredentialsPresence, loginUser);
+
+router.post("/logout", authenticateToken, logoutUser);
 
 router.get("/profile", authenticateToken, viewUserProfile);
 
