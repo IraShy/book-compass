@@ -21,6 +21,8 @@ services:
       - 8000:8000
     volumes:
       - ./logs:/usr/src/app/logs
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
     command: npm run dev
 
     # The commented out section below is an example of how to define a PostgreSQL
