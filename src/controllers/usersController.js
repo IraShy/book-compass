@@ -77,7 +77,7 @@ async function loginUser(req, res) {
     }
 
     const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, {
-      expiresIn: "7d",
+      expiresIn: "24h",
     });
 
     req.log.info("User logged in successfully", {
@@ -85,12 +85,16 @@ async function loginUser(req, res) {
       email: normalizedEmail,
     });
 
+    res.cookie("authToken", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 24 * 60 * 60 * 1000, // 24 hours
+    });
+
     const { hashed_password, ...userWithoutPassword } = user;
 
-    res.json({
-      token,
-      user: userWithoutPassword,
-    });
+    res.json({ user: userWithoutPassword });
   } catch (err) {
     req.log.error("User login failed", {
       error: err.message,
@@ -99,6 +103,12 @@ async function loginUser(req, res) {
     });
     res.status(500).json({ error: "Login failed" });
   }
+}
+
+async function logoutUser(req, res) {
+  res.clearCookie("authToken");
+  req.log.info("User logged out successfully", { userId: req.user?.userId });
+  res.status(200).json({ message: "Logged out successfully" });
 }
 
 async function viewUserProfile(req, res) {
@@ -135,5 +145,6 @@ async function viewUserProfile(req, res) {
 module.exports = {
   registerUser,
   loginUser,
+  logoutUser,
   viewUserProfile,
 };
