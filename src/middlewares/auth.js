@@ -7,7 +7,10 @@ function authenticateToken(req, res, next) {
   try {
     const token = req.cookies.authToken;
 
+    req.log.debug(`auth > authenticateToken > token: ${token}`);
+
     if (!token) {
+      req.log.debug("No token provided");
       return res.status(401).json({ error: "Authentication required" });
     }
 

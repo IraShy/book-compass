@@ -122,6 +122,7 @@ async function logoutUser(req, res) {
 async function viewUserProfile(req, res) {
   try {
     const userId = req.user.userId;
+    req.log.debug(`userID: ${userId}`);
 
     if (!userId) {
       req.log.warn("Profile access attempt without authentication");
