@@ -1,5 +1,7 @@
 const express = require("express");
+const cors = require("cors");
 const app = express();
+const cookieParser = require("cookie-parser");
 
 const db = require("../db");
 const usersRoutes = require("./routes/users");
@@ -7,7 +9,15 @@ const booksRoutes = require("./routes/books");
 const reviewsRoutes = require("./routes/reviews");
 const { requestLogger } = require("./middlewares/requestLogger");
 
+app.use(
+  cors({
+    origin: "http://localhost:5173",
+    credentials: true,
+  })
+);
+
 app.use(express.json());
+app.use(cookieParser());
 
 app.use(requestLogger);
 

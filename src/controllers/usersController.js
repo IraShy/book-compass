@@ -2,6 +2,7 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const validator = require("validator");
 const db = require("../../db");
+const { generateToken } = require("../services/authService");
 
 require("dotenv").config();
 
@@ -24,8 +25,12 @@ async function registerUser(req, res) {
       [normalizedEmail, username, hashed]
     );
 
+    const userId = result.rows[0].id;
+
+    generateToken(res, userId);
+
     req.log.info("User registered successfully", {
-      userId: result.rows[0].id,
+      userId: userId,
       email: normalizedEmail,
       username,
     });
@@ -76,21 +81,16 @@ async function loginUser(req, res) {
       return res.status(401).json({ error: "Invalid credentials" });
     }
 
-    const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, {
-      expiresIn: "7d",
-    });
-
     req.log.info("User logged in successfully", {
       userId: user.id,
-      email: normalizedEmail,
+      email: user.email,
     });
+
+    generateToken(res, user.id);
 
     const { hashed_password, ...userWithoutPassword } = user;
 
-    res.json({
-      token,
-      user: userWithoutPassword,
-    });
+    res.json({ user: userWithoutPassword });
   } catch (err) {
     req.log.error("User login failed", {
       error: err.message,
@@ -101,9 +101,24 @@ async function loginUser(req, res) {
   }
 }
 
+async function logoutUser(req, res) {
+  try {
+    res.clearCookie("authToken");
+    req.log.info("User logged out successfully", { userId: req.user?.userId });
+    res.status(200).json({ message: "Logged out successfully" });
+  } catch (err) {
+    req.log.warn("Logout failed", {
+      error: err.message,
+      userId: req.user?.userId,
+      stack: err.stack,
+    });
+  }
+}
+
 async function viewUserProfile(req, res) {
   try {
     const userId = req.user.userId;
+    req.log.debug(`userID: ${userId}`);
 
     if (!userId) {
       req.log.warn("Profile access attempt without authentication");
@@ -135,5 +150,6 @@ async function viewUserProfile(req, res) {
 module.exports = {
   registerUser,
   loginUser,
+  logoutUser,
   viewUserProfile,
 };

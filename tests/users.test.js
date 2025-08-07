@@ -7,13 +7,13 @@ const registerUser = (data) =>
   request(app).post(`${baseUrl}/register`).send(data);
 const loginUser = (data) => request(app).post(`${baseUrl}/login`).send(data);
 
-afterAll(async () => {
-  await db.query("DELETE FROM users WHERE email LIKE 'testuser%@example.com';");
-  await db.end();
+beforeEach(async () => {
+  await db.query("DELETE FROM users");
 });
 
-test("if it works", () => {
-  expect(1).toBe(1);
+afterAll(async () => {
+  await db.query("ROLLBACK");
+  await db.end();
 });
 
 describe("User routes", () => {
@@ -22,20 +22,22 @@ describe("User routes", () => {
     test("valid data", async () => {
       const res = await registerUser({
         email: "testuser1@example.com",
-        username: "testuser1",
+        username: "test username",
         password: "password123",
       });
 
       expect(res.statusCode).toBe(201);
       expect(res.body).toHaveProperty("email", "testuser1@example.com");
-      expect(res.body).toHaveProperty("username", "testuser1");
+      expect(res.body).toHaveProperty("username", "test username");
+      expect(res.headers["set-cookie"]).toBeDefined();
+      expect(res.headers["set-cookie"][0]).toMatch(/authToken=/);
 
       const user = await db.query(
         "SELECT * FROM users WHERE email = 'testuser1@example.com'"
       );
 
       expect(user.rows[0]).toMatchObject({
-        username: "testuser1",
+        username: "test username",
         email: "testuser1@example.com",
       });
     });
@@ -112,15 +114,21 @@ describe("User routes", () => {
 
   describe("POST /login", () => {
     test("valid data", async () => {
+      await registerUser({
+        email: "testuser1@example.com",
+        password: "password123",
+      });
+
       const res = await loginUser({
         email: "testuser1@example.com",
         password: "password123",
       });
 
       expect(res.statusCode).toBe(200);
-      expect(res.body).toHaveProperty("token");
-
-      token = res.body.token;
+      expect(res.body).toHaveProperty("user");
+      expect(res.body.user).toHaveProperty("email", "testuser1@example.com");
+      expect(res.headers["set-cookie"]).toBeDefined();
+      expect(res.headers["set-cookie"][0]).toMatch(/authToken=/);
     });
 
     test("invalid email", async () => {
@@ -145,11 +153,18 @@ describe("User routes", () => {
   });
 
   test("GET /profile", async () => {
+    const registerRes = await registerUser({
+      email: "testuser1@example.com",
+      password: "password123",
+    });
+
+    const cookies = registerRes.headers["set-cookie"];
     const res = await request(app)
       .get("/api/users/profile")
-      .set("Authorization", `Bearer ${token}`);
+      .set("Cookie", cookies);
 
     expect(res.statusCode).toBe(200);
+    expect(res.body).toHaveProperty("userId");
     expect(res.body).toHaveProperty("username", "testuser1");
   });
 });

@@ -6,7 +6,7 @@ const bcrypt = require("bcrypt");
 const baseUrl = "/api/reviews";
 
 describe("Reviews routes", () => {
-  let testUserId, testBookId, authToken;
+  let testUserId, testBookId, cookies;
 
   beforeAll(async () => {
     await db.query("BEGIN");
@@ -21,7 +21,7 @@ describe("Reviews routes", () => {
     const loginRes = await request(app)
       .post("/api/users/login")
       .send({ email: "test@example.com", password: "password123" });
-    authToken = loginRes.body.token;
+    cookies = loginRes.headers["set-cookie"];
 
     const testBook = await db.query(
       "INSERT INTO books (title, authors, description) VALUES ($1, $2, $3) RETURNING id",
@@ -45,7 +45,7 @@ describe("Reviews routes", () => {
 
       const res = await request(app)
         .post(baseUrl)
-        .set("Authorization", `Bearer ${authToken}`)
+        .set("Cookie", cookies)
         .send(reviewData)
         .expect(201);
 

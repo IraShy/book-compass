@@ -5,6 +5,7 @@ const db = require("../db");
 const baseUrl = "/api/books";
 
 afterAll(async () => {
+  await db.query("ROLLBACK");
   await db.end();
 });
 
