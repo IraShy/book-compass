@@ -2,6 +2,7 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const validator = require("validator");
 const db = require("../../db");
+const { generateToken } = require("../services/authService");
 
 require("dotenv").config();
 
@@ -76,21 +77,12 @@ async function loginUser(req, res) {
       return res.status(401).json({ error: "Invalid credentials" });
     }
 
-    const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, {
-      expiresIn: "24h",
-    });
-
     req.log.info("User logged in successfully", {
       userId: user.id,
-      email: normalizedEmail,
+      email: user.email,
     });
 
-    res.cookie("authToken", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-      maxAge: 24 * 60 * 60 * 1000, // 24 hours
-    });
+    generateToken(res, user.id);
 
     const { hashed_password, ...userWithoutPassword } = user;
 
