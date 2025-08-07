@@ -25,8 +25,12 @@ async function registerUser(req, res) {
       [normalizedEmail, username, hashed]
     );
 
+    const userId = result.rows[0].id;
+
+    generateToken(res, userId);
+
     req.log.info("User registered successfully", {
-      userId: result.rows[0].id,
+      userId: userId,
       email: normalizedEmail,
       username,
     });
