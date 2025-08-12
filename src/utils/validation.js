@@ -16,7 +16,23 @@ const validatePasswordUtil = (password) => {
   return null; // Valid
 };
 
+const validateBookIdUtil = (bookId) => {
+  if (!bookId || !Number.isInteger(Number(bookId))) {
+    return "Valid book ID is required";
+  }
+  return null;
+};
+
+const validateRatingUtil = (rating) => {
+  if (!rating || !Number.isInteger(rating) || rating < 1 || rating > 10) {
+    return "Rating must be between 1 and 10";
+  }
+  return null;
+};
+
 module.exports = {
   validateEmailUtil,
   validatePasswordUtil,
+  validateBookIdUtil,
+  validateRatingUtil,
 };

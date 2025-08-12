@@ -2,6 +2,7 @@ const express = require("express");
 const db = require("../../db");
 const { createReview } = require("../controllers/reviewsController");
 const { authenticateToken } = require("../middlewares/auth");
+const { validateBookId, validateRating } = require("../middlewares/reviews");
 
 const router = express.Router();
 
@@ -13,7 +14,13 @@ router.get("/:id", (req, res) => {
   res.send("Single review");
 });
 
-router.post("/", authenticateToken, createReview);
+router.post(
+  "/",
+  authenticateToken,
+  validateBookId,
+  validateRating,
+  createReview
+);
 
 router.put("/:id", (req, res) => {
   res.send("Update review");
