@@ -4,6 +4,8 @@ const db = require("../../db");
 const {
   authenticateToken,
   checkCredentialsPresence,
+  validateEmailFormat,
+  validatePasswordFormat,
 } = require("../middlewares/auth");
 const {
   registerUser,
@@ -14,9 +16,15 @@ const {
 
 const router = express.Router();
 
-router.post("/register", checkCredentialsPresence, registerUser);
+router.post(
+  "/register",
+  checkCredentialsPresence,
+  validateEmailFormat,
+  validatePasswordFormat,
+  registerUser
+);
 
-router.post("/login", checkCredentialsPresence, loginUser);
+router.post("/login", checkCredentialsPresence, validateEmailFormat, loginUser);
 
 router.post("/logout", authenticateToken, logoutUser);
 

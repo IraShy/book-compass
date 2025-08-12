@@ -1,4 +1,8 @@
 const jwt = require("jsonwebtoken");
+const {
+  validateEmailUtil,
+  validatePasswordUtil,
+} = require("../utils/validation");
 
 /**
  * Middleware to authenticate JWT token
@@ -38,9 +42,6 @@ function authenticateToken(req, res, next) {
   }
 }
 
-/**
- * Middleware to check if email and password are present
- */
 const checkCredentialsPresence = (req, res, next) => {
   if (!req.body.email) {
     req.log.warn("Email not provided", { email: req.body.email });
@@ -56,4 +57,35 @@ const checkCredentialsPresence = (req, res, next) => {
   next();
 };
 
-module.exports = { authenticateToken, checkCredentialsPresence };
+const validateEmailFormat = (req, res, next) => {
+  const { email } = req.body;
+  const errorMessage = validateEmailUtil(email);
+
+  if (errorMessage) {
+    req.log.warn(errorMessage, { email });
+    return res.status(401).json({ error: errorMessage });
+  }
+
+  req.log.debug("Email validation passed", { email });
+  next();
+};
+
+const validatePasswordFormat = (req, res, next) => {
+  const { password, email } = req.body;
+  const errorMessage = validatePasswordUtil(password);
+
+  if (errorMessage) {
+    req.log.warn(errorMessage, { email });
+    return res.status(401).json({ error: errorMessage });
+  }
+
+  req.log.debug("Password validation passed", { email });
+  next();
+};
+
+module.exports = {
+  authenticateToken,
+  checkCredentialsPresence,
+  validateEmailFormat,
+  validatePasswordFormat,
+};

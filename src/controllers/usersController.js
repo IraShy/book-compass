@@ -11,18 +11,6 @@ async function registerUser(req, res) {
   try {
     const { email, password, username: rawUsername } = req.body;
 
-    if (!validator.isEmail(email)) {
-      req.log.warn("Invalid email format attempted", { email });
-      return res.status(401).json({ error: "Invalid email format" });
-    }
-
-    if (!validator.isLength(password, { min: 8, max: 64 })) {
-      req.log.warn("Invalid password length", { email });
-      return res
-        .status(400)
-        .json({ error: "Password must be between 8 and 64 characters long" });
-    }
-
     const username = rawUsername?.trim() || email.split("@")[0];
     const normalizedEmail = email.toLowerCase();
     const hashed = await bcrypt.hash(password, 10);
