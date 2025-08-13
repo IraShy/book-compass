@@ -208,4 +208,38 @@ describe("User routes", () => {
     expect(res.body).toHaveProperty("userId");
     expect(res.body).toHaveProperty("username", "testuser1");
   });
+
+  describe("POST /logout", () => {
+    test("log out from logged-in state", async () => {
+      const registerRes = await registerUser({
+        email: "testuser1@example.com",
+        password: "password123",
+      });
+
+      const cookies = registerRes.headers["set-cookie"];
+      const res = await request(app)
+        .post("/api/users/logout")
+        .set("Cookie", cookies);
+
+      expect(res.statusCode).toBe(200);
+      expect(res.headers["set-cookie"]).toBeDefined();
+      expect(res.headers["set-cookie"][0]).toMatch(/authToken=;/);
+
+      const cookieHeader = res.headers["set-cookie"][0];
+      const expiresMatch = cookieHeader.match(/Expires=([^;]+)/);
+      expect(expiresMatch).toBeTruthy();
+
+      const expiresDate = new Date(expiresMatch[1]);
+      expect(expiresDate.getTime()).toBeLessThan(Date.now());
+
+      expect(res.body).toHaveProperty("message", "Logged out successfully");
+    });
+
+    test("logout without authentication", async () => {
+      const res = await request(app).post("/api/users/logout");
+
+      expect(res.statusCode).toBe(401);
+      expect(res.body).toHaveProperty("error", "Authentication required");
+    });
+  });
 });
