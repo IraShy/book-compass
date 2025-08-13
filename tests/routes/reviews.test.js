@@ -1,6 +1,6 @@
 const request = require("supertest");
-const app = require("../src/app");
-const db = require("../db");
+const app = require("../../src/app");
+const db = require("../../db");
 const bcrypt = require("bcrypt");
 
 const baseUrl = "/api/reviews";

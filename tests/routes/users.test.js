@@ -1,6 +1,6 @@
 const request = require("supertest");
-const app = require("../src/app");
-const db = require("../db");
+const app = require("../../src/app");
+const db = require("../../db");
 
 const baseUrl = "/api/users";
 const registerUser = (data) =>
@@ -193,20 +193,29 @@ describe("User routes", () => {
     });
   });
 
-  test("GET /profile", async () => {
-    const registerRes = await registerUser({
-      email: "testuser1@example.com",
-      password: "password123",
+  describe("GET /profile", () => {
+    test("valid authentication", async () => {
+      const registerRes = await registerUser({
+        email: "testuser1@example.com",
+        password: "password123",
+      });
+
+      const cookies = registerRes.headers["set-cookie"];
+      const res = await request(app)
+        .get("/api/users/profile")
+        .set("Cookie", cookies);
+
+      expect(res.statusCode).toBe(200);
+      expect(res.body).toHaveProperty("userId");
+      expect(res.body).toHaveProperty("username", "testuser1");
     });
 
-    const cookies = registerRes.headers["set-cookie"];
-    const res = await request(app)
-      .get("/api/users/profile")
-      .set("Cookie", cookies);
+    test("no authentication", async () => {
+      const res = await request(app).get("/api/users/profile");
 
-    expect(res.statusCode).toBe(200);
-    expect(res.body).toHaveProperty("userId");
-    expect(res.body).toHaveProperty("username", "testuser1");
+      expect(res.statusCode).toBe(401);
+      expect(res.body).toHaveProperty("error", "Authentication required");
+    });
   });
 
   describe("POST /logout", () => {
