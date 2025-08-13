@@ -107,6 +107,7 @@ async function logoutUser(req, res) {
       userId: req.user?.userId,
       stack: err.stack,
     });
+    res.status(500).json({ error: "Logout failed" });
   }
 }
 
