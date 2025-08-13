@@ -1,6 +1,8 @@
 const {
   validateEmailUtil,
   validatePasswordUtil,
+  validateBookIdUtil,
+  validateRatingUtil,
 } = require("../../src/utils/validation");
 
 describe("Validation Utils", () => {
@@ -49,6 +51,39 @@ describe("Validation Utils", () => {
       expect(validatePasswordUtil("a".repeat(65))).toBe(
         "Password must be between 8 and 64 characters long"
       );
+    });
+  });
+
+  describe("validateBookIdUtil", () => {
+    test("valid book IDs", () => {
+      expect(validateBookIdUtil("1")).toBeNull();
+      expect(validateBookIdUtil("123")).toBeNull();
+      expect(validateBookIdUtil(1)).toBeNull();
+    });
+
+    test("invalid book IDs", () => {
+      expect(validateBookIdUtil(null)).toBe("Valid book ID is required");
+      expect(validateBookIdUtil("")).toBe("Valid book ID is required");
+      expect(validateBookIdUtil("abc")).toBe("Valid book ID is required");
+      expect(validateBookIdUtil("1.5")).toBe("Valid book ID is required");
+      expect(validateBookIdUtil("-7")).toBe("Valid book ID is required");
+      expect(validateBookIdUtil(0)).toBe("Valid book ID is required");
+    });
+  });
+
+  describe("validateRatingUtil", () => {
+    test("valid ratings", () => {
+      for (let i = 1; i <= 10; i++) {
+        expect(validateRatingUtil(i)).toBeNull();
+      }
+    });
+
+    test("invalid ratings", () => {
+      expect(validateRatingUtil(0)).toBe("Rating must be between 1 and 10");
+      expect(validateRatingUtil(11)).toBe("Rating must be between 1 and 10");
+      expect(validateRatingUtil(null)).toBe("Rating must be between 1 and 10");
+      expect(validateRatingUtil("5")).toBe("Rating must be between 1 and 10");
+      expect(validateRatingUtil(5.5)).toBe("Rating must be between 1 and 10");
     });
   });
 });
