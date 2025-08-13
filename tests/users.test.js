@@ -75,6 +75,30 @@ describe("User routes", () => {
       expect(res.body).toHaveProperty("error", "Password is required");
     });
 
+    test("short password", async () => {
+      const res = await registerUser({
+        email: "testuser2@example.com",
+        password: "short",
+      });
+      expect(res.statusCode).toBe(401);
+      expect(res.body).toHaveProperty(
+        "error",
+        "Password must be between 8 and 64 characters long"
+      );
+    });
+
+    test("long password", async () => {
+      const res = await registerUser({
+        email: "testuser2@example.com",
+        password: "a".repeat(65),
+      });
+      expect(res.statusCode).toBe(401);
+      expect(res.body).toHaveProperty(
+        "error",
+        "Password must be between 8 and 64 characters long"
+      );
+    });
+
     test("duplicate email", async () => {
       await registerUser({
         email: "testuser2@example.com",
@@ -131,7 +155,24 @@ describe("User routes", () => {
       expect(res.headers["set-cookie"][0]).toMatch(/authToken=/);
     });
 
-    test("invalid email", async () => {
+    test("invalid email format", async () => {
+      const invalidEmails = [
+        "invalidemail.com",
+        "@invalidemail.com",
+        "invalidemail@.com",
+        "invalidemail@com",
+        "invalid@",
+        "invalid@@example.com",
+      ];
+
+      for (const email of invalidEmails) {
+        const res = await loginUser({ email, password: "password123" });
+        expect(res.statusCode).toBe(401);
+        expect(res.body).toHaveProperty("error", "Invalid email format");
+      }
+    });
+
+    test("non-existing email", async () => {
       const res = await loginUser({
         email: "nonexistent@example.com",
         password: "password123",
