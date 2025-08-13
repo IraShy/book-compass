@@ -17,7 +17,7 @@ const validatePasswordUtil = (password) => {
 };
 
 const validateBookIdUtil = (bookId) => {
-  if (!bookId || !Number.isInteger(Number(bookId))) {
+  if (!bookId || !Number.isInteger(Number(bookId)) || Number(bookId) <= 0) {
     return "Valid book ID is required";
   }
   return null;
