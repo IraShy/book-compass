@@ -133,7 +133,14 @@ async function fetchBookFromGoogle(title, author = "") {
       smallThumbnail: info.imageLinks?.smallThumbnail || "",
     };
   } catch (error) {
-    console.error("Google Books API error:", error.message);
+    const logger = require("../utils/logger");
+    logger.error("Google Books API error", {
+      message: error.message,
+      stack: error.stack,
+      status: error.status,
+      title,
+      author,
+    });
     return null;
   }
 }
