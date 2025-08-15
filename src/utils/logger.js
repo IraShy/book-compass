@@ -8,11 +8,16 @@ const maxLogFiles = 5;
 const logDir = path.join(process.cwd(), "logs");
 
 if (!fs.existsSync(logDir)) {
-  fs.mkdirSync(logDir, { recursive: true });
+  try {
+    fs.mkdirSync(logDir, { recursive: true });
+  } catch (error) {
+    throw new Error("Log directory creation failed");
+  }
 }
 
 const logLevel = process.env.NODE_ENV === "production" ? "info" : "debug";
-const consoleLogLevel = process.env.NODE_ENV === "production" ? "warn" : "debug";
+const consoleLogLevel =
+  process.env.NODE_ENV === "production" ? "warn" : "debug";
 
 const getUTCTimestamp = () => {
   return new Date().toISOString().replace("T", " ").substring(0, 19);
