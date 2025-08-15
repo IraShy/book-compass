@@ -15,11 +15,6 @@ jobs:
     env:
       PORT: 8000
       DATABASE_URL: postgresql://bookuser:bookpassword@localhost:5432/book_compass_test
-      # DB_USER: bookuser
-      # DB_PASSWORD: bookpassword
-      # DB_HOST: localhost
-      # DB_PORT: 5432
-      # DB_NAME: book_compass_test
       NODE_ENV: test
       JWT_SECRET: secret
 
