@@ -7,7 +7,7 @@ const {
 const validateBookId = (req, res, next) => {
   const error = validateBookIdUtil(req.body.bookId);
   if (error) {
-    req.logger.warn("Invalid book ID", {
+    req.log.warn("Invalid book ID", {
       bookId: req.body.bookId,
       error,
     });
@@ -19,7 +19,7 @@ const validateBookId = (req, res, next) => {
 const validateRating = (req, res, next) => {
   const error = validateRatingUtil(req.body.rating);
   if (error) {
-    req.logger.warn("Invalid rating", {
+    req.log.warn("Invalid rating", {
       rating: req.body.rating,
       error,
     });
