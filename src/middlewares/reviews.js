@@ -6,19 +6,21 @@ const {
 } = require("../utils/validation");
 
 const validateBookId = async (req, res, next) => {
-  const formatError = validateBookIdUtil(req.body.bookId);
+  const bookId = req.body?.bookId || req.params.bookId;
+
+  const formatError = validateBookIdUtil(bookId);
   if (formatError) {
     req.log.warn("Invalid book ID", {
-      bookId: req.body.bookId,
+      bookId,
       error: formatError,
     });
     return res.status(400).json({ error: formatError });
   }
 
-  const existsError = await validateBookExistsUtil(req.body.bookId);
+  const existsError = await validateBookExistsUtil(bookId);
   if (existsError) {
     req.log.warn("Book does not exist", {
-      bookId: req.body.bookId,
+      bookId,
       error: existsError,
     });
     return res.status(404).json({ error: existsError });

@@ -40,6 +40,44 @@ async function createReview(req, res) {
     return res.status(500).json({ error: "Failed to create review" });
   }
 }
+
+async function getReview(req, res) {
+  const userId = req.user.userId;
+  const bookId = req.params.bookId;
+
+  try {
+    const result = await db.query(
+      "SELECT * FROM reviews WHERE user_id = $1 AND book_id = $2",
+      [userId, bookId]
+    );
+
+    if (result.rows.length === 0) {
+      req.log.warn("Review not found", {
+        userId,
+        bookId,
+      });
+      return res.status(404).json({ error: "Review not found" });
+    }
+
+    req.log.info("Review fetched successfully", {
+      reviewId: result.rows[0].id,
+      userId,
+      bookId,
+    });
+
+    return res.status(200).json({ review: result.rows[0] });
+  } catch (err) {
+    req.log.error("Error fetching review", {
+      error: err.message,
+      stack: err.stack,
+      userId,
+      bookId,
+    });
+    return res.status(500).json({ error: "Failed to fetch review" });
+  }
+}
+
 module.exports = {
   createReview,
+  getReview,
 };
