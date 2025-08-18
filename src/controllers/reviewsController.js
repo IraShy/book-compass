@@ -5,11 +5,6 @@ async function createReview(req, res) {
     const userId = req.user?.userId;
     const { bookId, rating, content } = req.body;
 
-    if (!userId) {
-      req.log.warn("Review creation attempt without authentication");
-      return res.status(401).json({ error: "Authentication required" });
-    }
-
     req.log.debug("Review creation initiated", {
       userId,
       bookId,
