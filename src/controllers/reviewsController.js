@@ -16,7 +16,7 @@ async function createReview(req, res) {
       `INSERT INTO reviews (user_id, book_id, rating, content) 
      VALUES ($1, $2, $3, $4) 
      RETURNING *`,
-      [userId, bookId, rating, content]
+      [userId, bookId, rating, content || null]
     );
 
     req.log.info("Review created", {
