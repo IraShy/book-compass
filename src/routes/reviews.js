@@ -2,7 +2,11 @@ const express = require("express");
 const db = require("../../db");
 const { createReview } = require("../controllers/reviewsController");
 const { authenticateToken } = require("../middlewares/auth");
-const { validateBookId, validateRating } = require("../middlewares/reviews");
+const {
+  validateBookId,
+  validateRating,
+  checkDuplicateReview,
+} = require("../middlewares/reviews");
 
 const router = express.Router();
 
@@ -19,6 +23,7 @@ router.post(
   authenticateToken,
   validateBookId,
   validateRating,
+  checkDuplicateReview,
   createReview
 );
 
