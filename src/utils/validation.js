@@ -1,4 +1,5 @@
 const validator = require("validator");
+const db = require("../../db");
 
 const validateEmailUtil = (email) => {
   if (!validator.isEmail(email)) {
@@ -23,6 +24,14 @@ const validateBookIdUtil = (bookId) => {
   return null;
 };
 
+const validateBookExistsUtil = async (bookId) => {
+  const res = await db.query("SELECT * FROM books WHERE id = $1", [bookId]);
+  if (res.rows.length === 0) {
+    return "Book not found";
+  }
+  return null;
+};
+
 const validateRatingUtil = (rating) => {
   if (!rating || !Number.isInteger(rating) || rating < 1 || rating > 10) {
     return "Rating must be between 1 and 10";
@@ -35,4 +44,5 @@ module.exports = {
   validatePasswordUtil,
   validateBookIdUtil,
   validateRatingUtil,
+  validateBookExistsUtil,
 };
