@@ -10,6 +10,9 @@ let testUserId, testBookId, cookies;
 const postReview = (data) =>
   request(app).post(baseUrl).set("Cookie", cookies).send(data);
 
+const fetchReview = () =>
+  request(app).get(`${baseUrl}/${testBookId}`).set("Cookie", cookies);
+
 describe("Reviews routes", () => {
   beforeAll(async () => {
     await db.query("BEGIN");
@@ -164,6 +167,78 @@ describe("Reviews routes", () => {
       expect(res.statusCode).toBe(409);
       expect(res.body).toHaveProperty("error");
       expect(res.body.error).toBe("You have already reviewed this book");
+    });
+  });
+
+  describe("GET /reviews/:bookId", () => {
+    it("should fetch the user's review for a book", async () => {
+      const reviewData = {
+        bookId: testBookId,
+        rating: 5,
+        content: "Great book!",
+      };
+
+      await postReview(reviewData);
+
+      const res = await fetchReview();
+
+      expect(res.statusCode).toBe(200);
+      expect(res.body.review).toHaveProperty("id");
+      expect(res.body.review.rating).toBe(reviewData.rating);
+      expect(res.body.review.content).toBe(reviewData.content);
+    });
+
+    it("should return 404 if no review exists for the user", async () => {
+      const res = await fetchReview();
+
+      expect(res.statusCode).toBe(404);
+      expect(res.body).toHaveProperty("error");
+      expect(res.body.error).toBe("Review not found");
+    });
+
+    it("should return 401 if user is not authenticated", async () => {
+      await request(app).post("/api/users/logout");
+      const res = await request(app).get(`${baseUrl}/${testBookId}`);
+
+      expect(res.statusCode).toBe(401);
+      expect(res.body).toHaveProperty("error");
+      expect(res.body.error).toBe("Authentication required");
+    });
+
+    it("should return 400 for invalid book ID format", async () => {
+      const res = await request(app)
+        .get(`${baseUrl}/invalid-id`)
+        .set("Cookie", cookies);
+
+      expect(res.statusCode).toBe(400);
+      expect(res.body.error).toBe("Valid book ID is required");
+    });
+
+    it("should return 404 when book does not exist", async () => {
+      const res = await request(app)
+        .get(`${baseUrl}/99999`)
+        .set("Cookie", cookies);
+
+      expect(res.statusCode).toBe(404);
+      expect(res.body.error).toBe("Book not found");
+    });
+
+    it("should not return other users' reviews", async () => {
+      const hashedPassword = await bcrypt.hash("password123", 10);
+      const otherUser = await db.query(
+        "INSERT INTO users (email, username, hashed_password) VALUES ($1, $2, $3) RETURNING id",
+        ["other@example.com", "otheruser", hashedPassword]
+      );
+
+      await db.query(
+        "INSERT INTO reviews (user_id, book_id, rating, content) VALUES ($1, $2, $3, $4)",
+        [otherUser.rows[0].id, testBookId, 3, "Other user's review"]
+      );
+
+      const res = await fetchReview();
+
+      expect(res.statusCode).toBe(404);
+      expect(res.body.error).toBe("Review not found");
     });
   });
 });
