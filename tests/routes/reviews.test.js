@@ -315,4 +315,67 @@ describe("Reviews routes", () => {
       expect(res.body.reviews[0].user_id).toBe(testUserId);
     });
   });
+
+  describe("PUT /reviews/:reviewId", () => {
+    let reviewId;
+
+    const updateReview = (data, id = reviewId) =>
+      request(app).put(`${baseUrl}/${id}`).set("Cookie", cookies).send(data);
+
+    beforeEach(async () => {
+      const review = await postReview({
+        bookId: testBookId,
+        rating: 5,
+        content: "Original review",
+      });
+      reviewId = review.body.review.id;
+    });
+
+    it("should update both rating and content", async () => {
+      const res = await updateReview({
+        rating: 8,
+        content: "Updated content",
+      });
+
+      expect(res.statusCode).toBe(200);
+      expect(res.body.review.rating).toBe(8);
+      expect(res.body.review.content).toBe("Updated content");
+    });
+
+    it("should sanitize content by trimming whitespace", async () => {
+      const res = await updateReview({
+        rating: 7,
+        content: "  trimmed content  ",
+      });
+
+      expect(res.statusCode).toBe(200);
+      expect(res.body.review.content).toBe("trimmed content");
+    });
+
+    it("should convert empty string to null", async () => {
+      const res = await updateReview({
+        rating: 6,
+        content: "",
+      });
+
+      expect(res.statusCode).toBe(200);
+      expect(res.body.review.content).toBe(null);
+    });
+
+    it("should return 404 when review doesn't exist", async () => {
+      const res = await updateReview({ rating: 8 }, 99999);
+
+      expect(res.statusCode).toBe(404);
+      expect(res.body.error).toBe("Review not found");
+    });
+
+    it("should return 401 when not authenticated", async () => {
+      const res = await request(app)
+        .put(`${baseUrl}/${reviewId}`)
+        .send({ rating: 8 });
+
+      expect(res.statusCode).toBe(401);
+      expect(res.body.error).toBe("Authentication required");
+    });
+  });
 });
