@@ -4,6 +4,7 @@ const {
   createReview,
   getReview,
   getAllReviews,
+  updateReview,
 } = require("../controllers/reviewsController");
 const { authenticateToken } = require("../middlewares/auth");
 const {
@@ -27,9 +28,8 @@ router.post(
   createReview
 );
 
-router.put("/:id", (req, res) => {
-  res.send("Update review");
-});
+// router.put("/:bookId", authenticateToken, validateRating, updateReview);
+router.put("/:id", authenticateToken, validateRating, updateReview);
 
 router.delete("/:id", (req, res) => {
   res.send("Delete review");

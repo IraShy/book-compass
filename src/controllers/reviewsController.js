@@ -112,8 +112,47 @@ async function getAllReviews(req, res) {
   }
 }
 
+async function updateReview(req, res) {
+  const userId = req.user.userId;
+  const reviewId = req.params.id;
+  const { rating, content } = req.body;
+
+  try {
+    const result = await db.query(
+      `UPDATE reviews 
+       SET rating = $1, content = $2, updated_at = NOW() 
+       WHERE id = $3 AND user_id = $4 
+       RETURNING *`,
+      [rating, sanitiseContent(content), reviewId, userId]
+    );
+
+    if (result.rows.length === 0) {
+      req.log.warn("Review not found for update", { userId, reviewId });
+      return res.status(404).json({ error: "Review not found" });
+    }
+
+    req.log.info("Review updated successfully", {
+      reviewId: result.rows[0].id,
+      userId,
+      rating,
+      contentLength: content?.length || 0,
+    });
+
+    return res.status(200).json({ review: result.rows[0] });
+  } catch (err) {
+    req.log.error("Error updating review", {
+      error: err.message,
+      stack: err.stack,
+      userId,
+      reviewId,
+    });
+    return res.status(500).json({ error: "Failed to update review" });
+  }
+}
+
 module.exports = {
   createReview,
   getReview,
   getAllReviews,
+  updateReview,
 };
