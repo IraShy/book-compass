@@ -80,7 +80,39 @@ async function getReview(req, res) {
   }
 }
 
+async function getAllReviews(req, res) {
+  const userId = req.user.userId;
+
+  try {
+    const result = await db.query(
+      `SELECT r.*, b.title, b.authors 
+       FROM reviews r 
+       JOIN books b ON r.book_id = b.id 
+       WHERE r.user_id = $1`,
+      [userId]
+    );
+
+    req.log.info("Reviews fetched successfully", {
+      userId,
+      reviewCount: result.rows.length,
+    });
+
+    return res.status(200).json({
+      reviews: result.rows,
+      count: result.rows.length,
+    });
+  } catch (err) {
+    req.log.error("Error fetching reviews", {
+      error: err.message,
+      stack: err.stack,
+      userId,
+    });
+    return res.status(500).json({ error: "Failed to fetch reviews" });
+  }
+}
+
 module.exports = {
   createReview,
   getReview,
+  getAllReviews,
 };

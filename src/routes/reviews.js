@@ -1,6 +1,10 @@
 const express = require("express");
 const db = require("../../db");
-const { createReview, getReview } = require("../controllers/reviewsController");
+const {
+  createReview,
+  getReview,
+  getAllReviews,
+} = require("../controllers/reviewsController");
 const { authenticateToken } = require("../middlewares/auth");
 const {
   validateBookId,
@@ -10,9 +14,7 @@ const {
 
 const router = express.Router();
 
-router.get("/", (req, res) => {
-  res.send("All reviews");
-});
+router.get("/", authenticateToken, getAllReviews);
 
 router.get("/:bookId", authenticateToken, validateBookId, getReview);
 
