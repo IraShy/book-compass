@@ -241,4 +241,78 @@ describe("Reviews routes", () => {
       expect(res.body.error).toBe("Review not found");
     });
   });
+
+  describe("GET /reviews", () => {
+    const getAllReviews = () =>
+      request(app).get(baseUrl).set("Cookie", cookies);
+
+    it("should return all user's reviews with book details", async () => {
+      await postReview({ bookId: testBookId, rating: 5, content: "Great!" });
+
+      const secondBook = await db.query(
+        "INSERT INTO books (title, authors, description) VALUES ($1, $2, $3) RETURNING id",
+        ["Second Book", ["Author"], "Description"]
+      );
+      await postReview({
+        bookId: secondBook.rows[0].id,
+        rating: 3,
+        content: "OK book",
+      });
+
+      const res = await getAllReviews();
+
+      expect(res.statusCode).toBe(200);
+      expect(res.body.reviews).toHaveLength(2);
+      expect(res.body.count).toBe(2);
+
+      expect(res.body.reviews[0]).toHaveProperty("title");
+      expect(res.body.reviews[0]).toHaveProperty("authors");
+      expect(res.body.reviews[0]).toHaveProperty("rating");
+      expect(res.body.reviews[0]).toHaveProperty("content");
+
+      expect(res.body.reviews[1]).toHaveProperty("title");
+      expect(res.body.reviews[1]).toHaveProperty("authors");
+      expect(res.body.reviews[1]).toHaveProperty("rating");
+      expect(res.body.reviews[1]).toHaveProperty("content");
+    });
+
+    it("should return empty array when user has no reviews", async () => {
+      const res = await getAllReviews();
+
+      expect(res.statusCode).toBe(200);
+      expect(res.body.reviews).toEqual([]);
+      expect(res.body.count).toBe(0);
+    });
+
+    it("should return 401 when not authenticated", async () => {
+      const res = await request(app).get(baseUrl);
+
+      expect(res.statusCode).toBe(401);
+      expect(res.body.error).toBe("Authentication required");
+    });
+
+    it("should only return current user's reviews", async () => {
+      // Create review for current user
+      await postReview({ bookId: testBookId, rating: 5, content: "My review" });
+
+      // Create another user and their review
+      const hashedPassword = await bcrypt.hash("password123", 10);
+      const newUser = await db.query(
+        "INSERT INTO users (email, username, hashed_password) VALUES ($1, $2, $3) RETURNING id",
+        ["new@example.com", "newuser", hashedPassword]
+      );
+
+      await db.query(
+        "INSERT INTO reviews (user_id, book_id, rating, content) VALUES ($1, $2, $3, $4)",
+        [newUser.rows[0].id, testBookId, 3, "New user's review"]
+      );
+
+      const res = await getAllReviews();
+
+      expect(res.statusCode).toBe(200);
+      expect(res.body.reviews).toHaveLength(1);
+      expect(res.body.reviews[0].content).toBe("My review");
+      expect(res.body.reviews[0].user_id).toBe(testUserId);
+    });
+  });
 });
