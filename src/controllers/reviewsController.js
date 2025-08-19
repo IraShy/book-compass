@@ -47,7 +47,10 @@ async function getReview(req, res) {
 
   try {
     const result = await db.query(
-      "SELECT * FROM reviews WHERE user_id = $1 AND book_id = $2",
+      `SELECT r.*, b.title, b.authors 
+       FROM reviews r 
+       JOIN books b ON r.book_id = b.id 
+       WHERE r.user_id = $1 AND r.book_id = $2`,
       [userId, bookId]
     );
 
