@@ -39,10 +39,18 @@ const validateRatingUtil = (rating) => {
   return null;
 };
 
+const sanitiseContent = (content) => {
+  if (!content || typeof content !== "string") return null;
+
+  const trimmed = content.trim();
+  return trimmed === "" ? null : trimmed;
+};
+
 module.exports = {
   validateEmailUtil,
   validatePasswordUtil,
   validateBookIdUtil,
   validateRatingUtil,
   validateBookExistsUtil,
+  sanitiseContent,
 };

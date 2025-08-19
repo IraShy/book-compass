@@ -1,4 +1,5 @@
 const db = require("../../db");
+const { sanitiseContent } = require("../utils/validation");
 
 async function createReview(req, res) {
   try {
@@ -16,7 +17,7 @@ async function createReview(req, res) {
       `INSERT INTO reviews (user_id, book_id, rating, content) 
      VALUES ($1, $2, $3, $4) 
      RETURNING *`,
-      [userId, bookId, rating, content || null]
+      [userId, bookId, rating, sanitiseContent(content)]
     );
 
     req.log.info("Review created", {
