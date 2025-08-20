@@ -26,18 +26,22 @@ A RESTful API for book discovery and review management, built with Node.js and d
 ## Available Endpoints
 
 ### Authentication
+
 - `POST /users/register` - Register a new user
 - `POST /users/login` - User login
 - `GET /users/profile` - Get user profile
 
 ### Books
+
 - `GET /books/find` - Find or add a book
 
 ### Reviews
+
 - `POST /reviews` - Create a new review
 - `GET /reviews/:bookId` - Get user's review for a specific book
 - `GET /reviews` - Get all user's reviews
 - `PUT /reviews/:reviewId` - Update an existing review
+- `DELETE /reviews/:reviewId` - Delete an existing review
 
 ## Tech Stack
 
