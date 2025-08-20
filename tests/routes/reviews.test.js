@@ -24,6 +24,12 @@ describe("Reviews routes", () => {
     );
     testUserId = testUser.rows[0].id;
 
+    const otherUser = await db.query(
+      "INSERT INTO users (email, username, hashed_password) VALUES ($1, $2, $3) RETURNING id",
+      ["other@example.com", "otheruser", hashedPassword]
+    );
+    otherUserId = otherUser.rows[0].id;
+
     const loginRes = await request(app)
       .post("/api/users/login")
       .send({ email: "test@example.com", password: "password123" });
@@ -224,15 +230,9 @@ describe("Reviews routes", () => {
     });
 
     it("should not return other users' reviews", async () => {
-      const hashedPassword = await bcrypt.hash("password123", 10);
-      const otherUser = await db.query(
-        "INSERT INTO users (email, username, hashed_password) VALUES ($1, $2, $3) RETURNING id",
-        ["other@example.com", "otheruser", hashedPassword]
-      );
-
       await db.query(
         "INSERT INTO reviews (user_id, book_id, rating, content) VALUES ($1, $2, $3, $4)",
-        [otherUser.rows[0].id, testBookId, 3, "Other user's review"]
+        [otherUserId, testBookId, 3, "Other user's review"]
       );
 
       const res = await fetchReview();
@@ -295,16 +295,10 @@ describe("Reviews routes", () => {
       // Create review for current user
       await postReview({ bookId: testBookId, rating: 5, content: "My review" });
 
-      // Create another user and their review
-      const hashedPassword = await bcrypt.hash("password123", 10);
-      const newUser = await db.query(
-        "INSERT INTO users (email, username, hashed_password) VALUES ($1, $2, $3) RETURNING id",
-        ["new@example.com", "newuser", hashedPassword]
-      );
-
+      // Create review for another user
       await db.query(
         "INSERT INTO reviews (user_id, book_id, rating, content) VALUES ($1, $2, $3, $4)",
-        [newUser.rows[0].id, testBookId, 3, "New user's review"]
+        [otherUserId, testBookId, 3, "New user's review"]
       );
 
       const res = await getAllReviews();
@@ -342,7 +336,7 @@ describe("Reviews routes", () => {
       expect(res.body.review.content).toBe("Updated content");
     });
 
-    it("should sanitize content by trimming whitespace", async () => {
+    it("should sanitise content by trimming whitespace", async () => {
       const res = await updateReview({
         rating: 7,
         content: "  trimmed content  ",
