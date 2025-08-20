@@ -390,5 +390,65 @@ describe("Reviews routes", () => {
       expect(checkOther.rows[0].rating).toBe(3);
     });
   });
+
+  describe("DELETE /reviews/:reviewId", () => {
+    let reviewId;
+
+    const deleteReview = (id = reviewId) =>
+      request(app).delete(`${baseUrl}/${id}`).set("Cookie", cookies);
+
+    beforeEach(async () => {
+      const review = await postReview({
+        bookId: testBookId,
+        rating: 5,
+        content: "Review to delete",
+      });
+      reviewId = review.body.review.id;
+    });
+
+    it("should delete an existing review", async () => {
+      const res = await deleteReview();
+
+      expect(res.statusCode).toBe(204);
+      expect(res.body).toEqual({});
+
+      const checkRes = await request(app)
+        .get(`${baseUrl}/${testBookId}`)
+        .set("Cookie", cookies);
+
+      expect(checkRes.statusCode).toBe(404);
+      expect(checkRes.body.error).toBe("Review not found");
+    });
+
+    it("should return 404 when review doesn't exist", async () => {
+      const res = await deleteReview(99999);
+
+      expect(res.statusCode).toBe(404);
+      expect(res.body.error).toBe("Review not found");
+    });
+
+    it("should return 401 when not authenticated", async () => {
+      const res = await request(app).delete(`${baseUrl}/${reviewId}`);
+
+      expect(res.statusCode).toBe(401);
+      expect(res.body.error).toBe("Authentication required");
+    });
+
+    it("should not delete other user's review", async () => {
+      const otherReview = await db.query(
+        "INSERT INTO reviews (user_id, book_id, rating, content) VALUES ($1, $2, $3, $4) RETURNING id",
+        [otherUserId, testBookId, 3, "Other user's review"]
+      );
+
+      const res = await deleteReview(otherReview.rows[0].id);
+
+      expect(res.statusCode).toBe(404);
+      expect(res.body.error).toBe("Review not found");
+
+      const checkOther = await db.query("SELECT * FROM reviews WHERE id = $1", [
+        otherReview.rows[0].id,
+      ]);
+      expect(checkOther.rows).toHaveLength(1);
+    });
   });
 });
