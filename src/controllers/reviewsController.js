@@ -150,9 +150,44 @@ async function updateReview(req, res) {
   }
 }
 
+async function deleteReview(req, res) {
+  const userId = req.user.userId;
+  const reviewId = req.params.id;
+
+  try {
+    const result = await db.query(
+      `DELETE FROM reviews 
+       WHERE id = $1 AND user_id = $2 
+       RETURNING id`,
+      [reviewId, userId]
+    );
+
+    if (result.rows.length === 0) {
+      req.log.warn("Review not found for deletion", { userId, reviewId });
+      return res.status(404).json({ error: "Review not found" });
+    }
+
+    req.log.info("Review deleted successfully", {
+      reviewId: result.rows[0].id,
+      userId,
+    });
+
+    return res.status(204).send();
+  } catch (err) {
+    req.log.error("Error deleting review", {
+      error: err.message,
+      stack: err.stack,
+      userId,
+      reviewId,
+    });
+    return res.status(500).json({ error: "Failed to delete review" });
+  }
+}
+
 module.exports = {
   createReview,
   getReview,
   getAllReviews,
   updateReview,
+  deleteReview,
 };
