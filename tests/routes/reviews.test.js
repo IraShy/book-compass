@@ -18,6 +18,7 @@ describe("Reviews routes", () => {
     await db.query("BEGIN");
 
     const hashedPassword = await bcrypt.hash("password123", 10);
+
     const testUser = await db.query(
       "INSERT INTO users (email, username, hashed_password) VALUES ($1, $2, $3) RETURNING id",
       ["test@example.com", "testuser", hashedPassword]
@@ -371,5 +372,23 @@ describe("Reviews routes", () => {
       expect(res.statusCode).toBe(401);
       expect(res.body.error).toBe("Authentication required");
     });
+
+    it("should not update other user's review", async () => {
+      const otherReview = await db.query(
+        "INSERT INTO reviews (user_id, book_id, rating, content) VALUES ($1, $2, $3, $4) RETURNING id",
+        [otherUserId, testBookId, 3, "Other user's review"]
+      );
+
+      const res = await updateReview({ rating: 9 }, otherReview.rows[0].id);
+
+      expect(res.statusCode).toBe(404);
+      expect(res.body.error).toBe("Review not found");
+
+      const checkOther = await db.query("SELECT * FROM reviews WHERE id = $1", [
+        otherReview.rows[0].id,
+      ]);
+      expect(checkOther.rows[0].rating).toBe(3);
+    });
+  });
   });
 });
