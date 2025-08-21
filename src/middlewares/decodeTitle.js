@@ -11,10 +11,13 @@ function decodeSearchParams(req, res, next) {
       return res.status(400).json({ error: "Title is required" });
     }
 
-    req.decodedTitle = decodeURIComponent(rawTitle).trim();
+    const titleParam = Array.isArray(rawTitle) ? rawTitle[0] : rawTitle;
+    const authorParam = Array.isArray(rawAuthor) ? rawAuthor[0] : rawAuthor;
 
-    if (rawAuthor) {
-      req.decodedAuthor = decodeURIComponent(rawAuthor).trim();
+    req.decodedTitle = decodeURIComponent(titleParam).trim();
+
+    if (authorParam) {
+      req.decodedAuthor = decodeURIComponent(authorParam).trim();
     }
 
     next();
