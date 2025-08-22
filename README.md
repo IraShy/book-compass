@@ -1,8 +1,16 @@
 # Book Compass Backend
 
-> ⚠️ **Work in Progress** - This project is currently under active development. Features are incomplete and may not function as expected. Please check back later for a stable release.
+> **Work in progress** - Core features are functional but the project is actively being developed and enhanced.
 
-A RESTful API for book discovery and review management, built with Node.js and deployed on Render.
+A RESTful API for personalised book recommendations powered by AI. Users can manage their book reviews and receive book suggestions based on their reading preferences.
+
+## Features
+
+- **User Authentication** - Secure JWT-based registration and login
+- **Book Management** - Search and add books via Google Books API
+- **Review System** - Create, read, update, and delete book reviews
+- **AI Recommendations** - Get personalised book suggestions using Google Gemini AI
+- **Private Experience** - Each user's reviews and recommendations are completely isolated
 
 ## Table of Contents
 
@@ -33,7 +41,7 @@ A RESTful API for book discovery and review management, built with Node.js and d
 
 ### Books
 
-- `GET /books/find` - Find or add a book
+- `GET /books/find` - Find or add a book from Google Books API
 
 ### Reviews
 
@@ -43,6 +51,10 @@ A RESTful API for book discovery and review management, built with Node.js and d
 - `PUT /reviews/:reviewId` - Update an existing review
 - `DELETE /reviews/:reviewId` - Delete an existing review
 
+### AI Recommendations
+
+- `POST /recommendations/generate` - Generate personalised book recommendations based on user's reviews
+
 ## Tech Stack
 
 **Backend:**
@@ -50,6 +62,8 @@ A RESTful API for book discovery and review management, built with Node.js and d
 - Node.js 23.7.0 with Express.js
 - PostgreSQL with Supabase
 - JWT authentication with bcrypt password hashing
+- Google Gemini AI for book recommendations
+- Google Books API integration
 - Winston logging
 - Jest testing framework with Supertest
 
@@ -84,7 +98,13 @@ PORT=8000
 NODE_ENV=development
 JWT_SECRET=<your-secure-jwt-secret>
 DATABASE_URL=postgres://bookuser:bookpassword@localhost:5432/book_compass_dev
+GEMINI_API_KEY=<your-gemini-api-key>
 ```
+
+#### Get API Keys
+
+1. **Gemini API Key**: Get your free API key from [Google AI Studio](https://aistudio.google.com/app/apikey)
+2. **Google Books API**: No API key required for basic usage
 
 <strong>Docker</strong>
 
