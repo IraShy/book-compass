@@ -1,4 +1,5 @@
 const db = require("../../db");
+const { fetchBookFromGoogle } = require("../services/bookService");
 const {
   getRecommendations,
   parseAIResponse,
@@ -43,15 +44,55 @@ async function generateRecommendations(req, res) {
     );
 
     if (reviewsResult.rows.length === 0) {
+      req.log.debug("No reviews found for user", { userId });
       return res.status(400).json({
         error: "Need at least 1 review to generate recommendations",
       });
     }
 
+    req.log.debug("Generating recommendations based on reviews", {
+      userId,
+      reviewCount: reviewsResult.rows.length,
+    });
+
     const rawResult = await getRecommendations(reviewsResult.rows);
     const recommendations = parseAIResponse(rawResult);
 
-    res.json({ recommendations });
+    const storedRecommendations = [];
+
+    // Find book for every recommendation and add in the db if doesn't exist; store suggestions
+    for (const rec of recommendations) {
+      let book = await fetchBookFromGoogle(rec.title, rec.authors);
+      if (!book) continue;
+
+      let bookResult = await db.query(
+        "SELECT id FROM books WHERE google_books_id = $1",
+        [book.google_books_id]
+      );
+
+      let bookId;
+      if (bookResult.rows.length > 0) {
+        bookId = bookResult.rows[0].id;
+      } else {
+        const insertResult = await db.query(
+          `INSERT INTO books (google_books_id, title, authors, description)
+           VALUES ($1, $2, $3, $4)
+           RETURNING id`,
+          [book.google_books_id, book.title, book.authors, book.description]
+        );
+        bookId = insertResult.rows[0].id;
+      }
+
+      // Store suggestion
+      await db.query(
+        `INSERT INTO suggestions (user_id, book_id, reason) VALUES ($1, $2, $3)`,
+        [userId, bookId, rec.reason]
+      );
+
+      storedRecommendations.push({ ...rec, bookId });
+    }
+
+    res.status(200).json({ recommendations: storedRecommendations });
   } catch (error) {
     req.log.error("Recommendation generation failed", { error: error.message });
     res.status(500).json({ error: "Failed to generate recommendations" });
