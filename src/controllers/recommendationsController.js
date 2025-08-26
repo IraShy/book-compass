@@ -34,11 +34,11 @@ async function generateRecommendations(req, res) {
     const userId = req.user.userId;
 
     const reviewsResult = await db.query(
-      `SELECT r.rating, r.content, b.title 
-       FROM reviews r 
-       JOIN books b ON r.book_id = b.id 
-       WHERE r.user_id = $1 
-       ORDER BY r.created_at DESC 
+      `SELECT r.rating, r.content, b.title, b.authors
+       FROM reviews r
+       JOIN books b ON r.book_id = b.id
+       WHERE r.user_id = $1
+       ORDER BY r.created_at DESC
        LIMIT 10`,
       [userId]
     );
@@ -58,41 +58,67 @@ async function generateRecommendations(req, res) {
     const rawResult = await getRecommendations(reviewsResult.rows);
     const recommendations = parseAIResponse(rawResult);
 
-    const storedRecommendations = [];
-
-    // Find book for every recommendation and add in the db if doesn't exist; store suggestions
-    for (const rec of recommendations) {
-      let book = await fetchBookFromGoogle(rec.title, rec.authors);
-      if (!book) continue;
-
-      let bookResult = await db.query(
-        "SELECT id FROM books WHERE google_books_id = $1",
-        [book.google_books_id]
-      );
-
-      let bookId;
-      if (bookResult.rows.length > 0) {
-        bookId = bookResult.rows[0].id;
-      } else {
-        const insertResult = await db.query(
-          `INSERT INTO books (google_books_id, title, authors, description)
-           VALUES ($1, $2, $3, $4)
-           RETURNING id`,
-          [book.google_books_id, book.title, book.authors, book.description]
-        );
-        bookId = insertResult.rows[0].id;
-      }
-
-      // Store suggestion
-      await db.query(
-        `INSERT INTO suggestions (user_id, book_id, reason) VALUES ($1, $2, $3)`,
-        [userId, bookId, rec.reason]
-      );
-
-      storedRecommendations.push({ ...rec, bookId });
+    if (!recommendations || recommendations.length === 0) {
+      req.log.warn("Gemini returned no recommendations.", { rawResult });
+      return res.status(404).json({
+        message: "No recommendations found. Please try again later.",
+      });
     }
 
-    res.status(200).json({ recommendations: storedRecommendations });
+    // Find book for every recommendation and add in the db if doesn't exist
+    const processedRecommendations = await Promise.all(
+      recommendations.map(async (rec) => {
+        const googleBook = await fetchBookFromGoogle(rec.title, rec.authors);
+        if (!googleBook) {
+          req.log.warn(`Could not find book on Google: ${rec.title}`);
+          return null;
+        }
+
+        let bookResult = await db.query(
+          "SELECT id FROM books WHERE google_books_id = $1",
+          [googleBook.google_books_id]
+        );
+
+        let bookId;
+        if (bookResult.rows.length > 0) {
+          bookId = bookResult.rows[0].id;
+        } else {
+          const insertResult = await db.query(
+            `INSERT INTO books (google_books_id, title, authors, description)
+             VALUES ($1, $2, $3, $4)
+             RETURNING id`,
+            [
+              googleBook.google_books_id,
+              googleBook.title,
+              googleBook.authors,
+              googleBook.description,
+            ]
+          );
+          bookId = insertResult.rows[0].id;
+        }
+
+        return { ...rec, bookId };
+      })
+    );
+
+    const validRecommendations = processedRecommendations.filter(
+      (rec) => rec !== null
+    );
+
+    const suggestionValues = validRecommendations
+      .map(
+        (rec) =>
+          `(${userId}, ${rec.bookId}, '${rec.reason.replace(/'/g, "''")}')`
+      )
+      .join(",");
+
+    if (suggestionValues.length > 0) {
+      await db.query(
+        `INSERT INTO suggestions (user_id, book_id, reason) VALUES ${suggestionValues}`
+      );
+    }
+
+    res.status(200).json({ recommendations: validRecommendations });
   } catch (error) {
     req.log.error("Recommendation generation failed", { error: error.message });
     res.status(500).json({ error: "Failed to generate recommendations" });
