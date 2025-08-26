@@ -21,13 +21,14 @@ function buildPrompt(reviews) {
   return `Based on these book reviews, suggest 3 books with brief reasons:
 ${reviewText}
 
-Format as JSON: [{"title": "Book Title", "authors": "Author(s)", "reason": "Why recommended"}]`;
+Format the response with JSON in a Markdown code block: [{"title": "Book Title", "authors": "Author(s)", "reason": "Why recommended"}]. Please do not include any other text outside the code block.`;
 }
 
 function parseAIResponse(rawResponse) {
   // Remove markdown code blocks and parse JSON
   const jsonMatch = rawResponse.match(/```json\n([\s\S]*?)\n```/);
-  if (jsonMatch) {
+  if (jsonMatch && jsonMatch[1]) {
+    console.log(jsonMatch[1]);
     return JSON.parse(jsonMatch[1]);
   }
   // Fallback: try parsing directly
