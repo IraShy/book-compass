@@ -4,6 +4,30 @@ const {
   parseAIResponse,
 } = require("../services/llm-service");
 
+async function fetchAllRecommendations(req, res) {
+  try {
+    const userId = req.user.userId;
+
+    const result = await db.query(
+      `SELECT s.book_id, s.reason, s.created_at, b.title, b.authors
+       FROM suggestions s
+       JOIN books b ON s.book_id = b.id
+       WHERE s.user_id = $1
+       ORDER BY s.created_at DESC`,
+      [userId]
+    );
+
+    req.log.info("Fetched recommendations for user", {
+      userId,
+      count: result.rows.length,
+    });
+    res.status(200).json(result.rows);
+  } catch (error) {
+    req.log.error("Failed to fetch recommendations", { error: error.message });
+    res.status(500).json({ error: "Failed to fetch recommendations" });
+  }
+}
+
 async function generateRecommendations(req, res) {
   try {
     const userId = req.user.userId;
@@ -35,5 +59,6 @@ async function generateRecommendations(req, res) {
 }
 
 module.exports = {
+  fetchAllRecommendations,
   generateRecommendations,
 };
