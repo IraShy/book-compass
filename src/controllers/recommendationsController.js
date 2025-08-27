@@ -43,10 +43,10 @@ async function generateRecommendations(req, res) {
       [userId]
     );
 
-    if (reviewsResult.rows.length === 0) {
-      req.log.debug("No reviews found for user", { userId });
+    if (reviewsResult.rows.length < 2) {
+      req.log.debug("Not enough reviews found for user", { userId });
       return res.status(400).json({
-        error: "Need at least 1 review to generate recommendations",
+        error: "Need at least 2 reviews to generate recommendations",
       });
     }
 
