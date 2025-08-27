@@ -112,17 +112,29 @@ async function generateRecommendations(req, res) {
       (rec) => rec !== null
     );
 
-    const suggestionValues = validRecommendations
-      .map(
-        (rec) =>
-          `(${userId}, ${rec.bookId}, '${rec.reason.replace(/'/g, "''")}')`
-      )
-      .join(",");
+    if (validRecommendations.length > 0) {
+      try {
+        const values = [];
+        const placeholders = [];
 
-    if (suggestionValues.length > 0) {
-      await db.query(
-        `INSERT INTO suggestions (user_id, book_id, reason) VALUES ${suggestionValues}`
-      );
+        validRecommendations.forEach((rec, index) => {
+          const offset = index * 3;
+          placeholders.push(`($${offset + 1}, $${offset + 2}, $${offset + 3})`);
+          values.push(userId, rec.bookId, rec.reason);
+        });
+
+        await db.query(
+          `INSERT INTO suggestions (user_id, book_id, reason) VALUES ${placeholders.join(
+            ", "
+          )}`,
+          values
+        );
+      } catch (insertError) {
+        req.log.error("Failed to insert suggestions", {
+          error: insertError.message,
+        });
+        throw insertError;
+      }
     }
 
     res.status(200).json({ recommendations: validRecommendations });
