@@ -65,39 +65,46 @@ async function generateRecommendations(req, res) {
       });
     }
 
-    // Find book for every recommendation and add in the db if doesn't exist
     const processedRecommendations = await Promise.all(
       recommendations.map(async (rec) => {
-        const googleBook = await fetchBookFromGoogle(rec.title, rec.authors);
-        if (!googleBook) {
-          req.log.warn(`Could not find book on Google: ${rec.title}`);
+        try {
+          const googleBook = await fetchBookFromGoogle(rec.title, rec.authors);
+          if (!googleBook) {
+            req.log.warn(`Could not find book on Google: ${rec.title}`);
+            return null;
+          }
+
+          const bookResult = await db.query(
+            "SELECT id FROM books WHERE google_books_id = $1",
+            [googleBook.google_books_id]
+          );
+
+          let bookId;
+          if (bookResult.rows.length > 0) {
+            bookId = bookResult.rows[0].id;
+          } else {
+            const insertResult = await db.query(
+              `INSERT INTO books (google_books_id, title, authors, description)
+               VALUES ($1, $2, $3, $4)
+               ON CONFLICT (google_books_id) DO NOTHING
+               RETURNING id`,
+              [
+                googleBook.google_books_id,
+                googleBook.title,
+                googleBook.authors,
+                googleBook.description,
+              ]
+            );
+            bookId = insertResult.rows[0]?.id;
+          }
+
+          return { ...rec, bookId };
+        } catch (error) {
+          req.log.warn(`Failed to process book: ${rec.title}`, {
+            error: error.message,
+          });
           return null;
         }
-
-        let bookResult = await db.query(
-          "SELECT id FROM books WHERE google_books_id = $1",
-          [googleBook.google_books_id]
-        );
-
-        let bookId;
-        if (bookResult.rows.length > 0) {
-          bookId = bookResult.rows[0].id;
-        } else {
-          const insertResult = await db.query(
-            `INSERT INTO books (google_books_id, title, authors, description)
-             VALUES ($1, $2, $3, $4)
-             RETURNING id`,
-            [
-              googleBook.google_books_id,
-              googleBook.title,
-              googleBook.authors,
-              googleBook.description,
-            ]
-          );
-          bookId = insertResult.rows[0].id;
-        }
-
-        return { ...rec, bookId };
       })
     );
 
