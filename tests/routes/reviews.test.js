@@ -37,10 +37,10 @@ describe("Reviews routes", () => {
     cookies = loginRes.headers["set-cookie"];
 
     const testBook = await db.query(
-      "INSERT INTO books (title, authors, description) VALUES ($1, $2, $3) RETURNING id",
-      ["Test Book", ["Test Author"], "A test book"]
+      "INSERT INTO books (google_books_id, title, authors, description) VALUES ($1, $2, $3, $4) RETURNING google_books_id",
+      ["testBookId", "Test Book", ["Test Author"], "A test book"]
     );
-    testBookId = testBook.rows[0].id;
+    testBookId = testBook.rows[0].google_books_id;
   });
 
   beforeEach(async () => {
@@ -112,7 +112,7 @@ describe("Reviews routes", () => {
 
     it("should return 400 for invalid book ID", async () => {
       const reviewData = {
-        bookId: "1qw23",
+        bookId: 111,
         rating: 5,
         content: "Great book!",
       };
@@ -126,7 +126,7 @@ describe("Reviews routes", () => {
 
     it("should return 404 when book doesn't exist", async () => {
       const reviewData = {
-        bookId: 99999,
+        bookId: "thisIdDoesntExist",
         rating: 5,
         content: "Great book!",
       };
@@ -149,7 +149,7 @@ describe("Reviews routes", () => {
 
       expect(res.statusCode).toBe(400);
       expect(res.body).toHaveProperty("error");
-      expect(res.body.error).toBe("Rating must be between 1 and 10");
+      expect(res.body.error).toBe("Rating must be an integer between 1 and 10");
     });
 
     it("should return 409 for duplicate review", async () => {
@@ -212,18 +212,9 @@ describe("Reviews routes", () => {
       expect(res.body.error).toBe("Authentication required");
     });
 
-    it("should return 400 for invalid book ID format", async () => {
-      const res = await request(app)
-        .get(`${baseUrl}/invalid-id`)
-        .set("Cookie", cookies);
-
-      expect(res.statusCode).toBe(400);
-      expect(res.body.error).toBe("Valid book ID is required");
-    });
-
     it("should return 404 when book does not exist", async () => {
       const res = await request(app)
-        .get(`${baseUrl}/99999`)
+        .get(`${baseUrl}/doesntExist`)
         .set("Cookie", cookies);
 
       expect(res.statusCode).toBe(404);
@@ -251,11 +242,11 @@ describe("Reviews routes", () => {
       await postReview({ bookId: testBookId, rating: 5, content: "Great!" });
 
       const secondBook = await db.query(
-        "INSERT INTO books (title, authors, description) VALUES ($1, $2, $3) RETURNING id",
-        ["Second Book", ["Author"], "Description"]
+        "INSERT INTO books (google_books_id, title, authors, description) VALUES ($1, $2, $3, $4) RETURNING google_books_id",
+        ["2ndBookId", "Second Book", ["Author"], "Description"]
       );
       await postReview({
-        bookId: secondBook.rows[0].id,
+        bookId: secondBook.rows[0].google_books_id,
         rating: 3,
         content: "OK book",
       });
