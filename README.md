@@ -20,6 +20,7 @@ A RESTful API for personalised book recommendations powered by AI. Users can man
 - [Prerequisites](#prerequisites)
 - [Setup](#setup)
 - [Running the Project](#running-the-project)
+- [Development](#development)
 - [Testing](#testing)
 
 ## Links
@@ -54,13 +55,14 @@ A RESTful API for personalised book recommendations powered by AI. Users can man
 ### AI Recommendations
 
 - `POST /recommendations/generate` - Generate personalised book recommendations based on user's reviews
+- `GET /recommendations` - Get all user's recommendations
 
 ## Tech Stack
 
 **Backend:**
 
 - Node.js 23.7.0 with Express.js
-- PostgreSQL with Supabase
+- PostgreSQL (Docker for dev, Supabase for production)
 - JWT authentication with bcrypt password hashing
 - Google Gemini AI for book recommendations
 - Google Books API integration
@@ -83,7 +85,7 @@ or:
 
 ## Setup
 
-#### Environment Configuration
+### Environment Configuration
 
 Copy the sample environment file and configure your settings:
 
@@ -101,19 +103,22 @@ DATABASE_URL=postgres://bookuser:bookpassword@localhost:5432/book_compass_dev
 GEMINI_API_KEY=<your-gemini-api-key>
 ```
 
-#### Get API Keys
+### Get API Keys
 
 1. **Gemini API Key**: Get your free API key from [Google AI Studio](https://aistudio.google.com/app/apikey)
 2. **Google Books API**: No API key required for basic usage
 
-<strong>Docker</strong>
+<strong>Docker Setup</strong>
 
 ```bash
+# Start the application
 docker compose up
+
+# The database schema is automatically applied on first run
 ```
 
 <details>
-<summary><strong>Local Development</strong></summary>
+<summary><strong>Local Development Setup</strong></summary>
 
 #### Database Setup
 
@@ -132,10 +137,9 @@ chmod +x db/setup.sh
 
 The setup script will:
 
-- Create a new database for dev (`book_compass_dev`) and test (`book_compass_test`) environments
-- Create a new user (`bookuser`)
-- Grant the user full privileges on the database
-- Initialise the database schema
+- Create databases for dev (`book_compass_dev`) and test (`book_compass_test`) environments
+- Create a database user (`bookuser`) with appropriate privileges
+- Apply the database schema to both databases
 
 #### Install Dependencies
 
@@ -153,8 +157,34 @@ npm install
 docker compose up
 ```
 
-<details>
-<summary><strong>Additional Docker Commands</strong></summary>
+## Development
+
+### Database Seeding
+
+Populate your database with sample data for development and testing:
+
+```bash
+# With Docker
+npm run seed:docker
+
+# Local development
+npm run seed
+```
+
+The seed script creates:
+
+- **Test users**: `alice@example.com` and `bob@example.com` (password: `password123`)
+- **Sample books**: Fetched from Google Books API with real IDs
+- **Detailed reviews**: Meaningful reviews that help test AI recommendations
+
+### Database Management
+
+```bash
+# Connect to database (Docker)
+docker-compose exec db psql -U bookuser -d book_compass_dev
+```
+
+### Docker Commands
 
 ```bash
 # Start services
@@ -163,17 +193,16 @@ docker compose up
 # Stop services
 docker compose down
 
-# Rebuild
+# Rebuild containers
 docker compose up --build
 
-# Remove containers and volumes (fresh start)
+# Fresh start (removes all data)
 docker compose down --volumes
+docker compose up
 
-# Remove everything (nuclear option)
-docker system prune -a --volumes
+# View logs
+docker compose logs
 ```
-
-</details>
 
 ### Local
 
@@ -200,7 +229,7 @@ cp .env.test_sample .env.test
 
 Update the `.env.test` file with your configuration.
 
-The setup.sh script creates both dev AND test databases, so no additional database setup is needed for testing.
+The `setup.sh` script creates both dev and test databases, so no additional database setup is needed for testing.
 
 ### Run Tests
 

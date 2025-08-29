@@ -58,15 +58,15 @@ describe("Validation Utils", () => {
     test("valid book IDs", () => {
       expect(validateBookIdUtil("1")).toBeNull();
       expect(validateBookIdUtil("123")).toBeNull();
-      expect(validateBookIdUtil(1)).toBeNull();
+      expect(validateBookIdUtil("abcd82n")).toBeNull();
     });
 
     test("invalid book IDs", () => {
       expect(validateBookIdUtil(null)).toBe("Valid book ID is required");
       expect(validateBookIdUtil("")).toBe("Valid book ID is required");
-      expect(validateBookIdUtil("abc")).toBe("Valid book ID is required");
-      expect(validateBookIdUtil("1.5")).toBe("Valid book ID is required");
-      expect(validateBookIdUtil("-7")).toBe("Valid book ID is required");
+      expect(validateBookIdUtil("  ")).toBe("Valid book ID is required");
+      expect(validateBookIdUtil(3)).toBe("Valid book ID is required");
+      expect(validateBookIdUtil(-7)).toBe("Valid book ID is required");
       expect(validateBookIdUtil(0)).toBe("Valid book ID is required");
     });
   });
@@ -79,11 +79,21 @@ describe("Validation Utils", () => {
     });
 
     test("invalid ratings", () => {
-      expect(validateRatingUtil(0)).toBe("Rating must be between 1 and 10");
-      expect(validateRatingUtil(11)).toBe("Rating must be between 1 and 10");
-      expect(validateRatingUtil(null)).toBe("Rating must be between 1 and 10");
-      expect(validateRatingUtil("5")).toBe("Rating must be between 1 and 10");
-      expect(validateRatingUtil(5.5)).toBe("Rating must be between 1 and 10");
+      expect(validateRatingUtil(0)).toBe(
+        "Rating must be an integer between 1 and 10"
+      );
+      expect(validateRatingUtil(11)).toBe(
+        "Rating must be an integer between 1 and 10"
+      );
+      expect(validateRatingUtil(null)).toBe(
+        "Rating must be an integer between 1 and 10"
+      );
+      expect(validateRatingUtil("5")).toBe(
+        "Rating must be an integer between 1 and 10"
+      );
+      expect(validateRatingUtil(5.5)).toBe(
+        "Rating must be an integer between 1 and 10"
+      );
     });
   });
 });

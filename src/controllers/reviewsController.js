@@ -50,7 +50,7 @@ async function getReview(req, res) {
     const result = await db.query(
       `SELECT r.*, b.title, b.authors 
        FROM reviews r 
-       JOIN books b ON r.book_id = b.id 
+       JOIN books b ON r.book_id = b.google_books_id 
        WHERE r.user_id = $1 AND r.book_id = $2`,
       [userId, bookId]
     );
@@ -88,7 +88,7 @@ async function getAllReviews(req, res) {
     const result = await db.query(
       `SELECT r.*, b.title, b.authors 
        FROM reviews r 
-       JOIN books b ON r.book_id = b.id 
+       JOIN books b ON r.book_id = b.google_books_id 
        WHERE r.user_id = $1`,
       [userId]
     );
