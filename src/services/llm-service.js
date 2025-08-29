@@ -28,7 +28,6 @@ function parseAIResponse(rawResponse) {
   // Remove markdown code blocks and parse JSON
   const jsonMatch = rawResponse.match(/```json\n([\s\S]*?)\n```/);
   if (jsonMatch && jsonMatch[1]) {
-    console.log(jsonMatch[1]);
     return JSON.parse(jsonMatch[1]);
   }
   // Fallback: try parsing directly
