@@ -32,6 +32,18 @@ async function createReview(req, res) {
       review: insertResult.rows[0],
     });
   } catch (err) {
+    if (err.code === "23505") {
+      // Unique constraint violation
+      req.log.warn("Duplicate review attempt", {
+        userId: req.user?.userId,
+        bookId: req.body.bookId,
+      });
+
+      return res
+        .status(409)
+        .json({ error: "You have already reviewed this book" });
+    }
+
     if (err.code === "23514") {
       // Check constraint violation
       req.log.warn("Review content too long", {
