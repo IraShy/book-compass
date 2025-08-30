@@ -175,6 +175,23 @@ describe("Reviews routes", () => {
       expect(res.body).toHaveProperty("error");
       expect(res.body.error).toBe("You have already reviewed this book");
     });
+
+    it("should return 400 for content exceeding 2000 characters", async () => {
+      const longContent = "a".repeat(2001);
+      const reviewData = {
+        bookId: testBookId,
+        rating: 5,
+        content: longContent,
+      };
+
+      const res = await postReview(reviewData);
+
+      expect(res.statusCode).toBe(400);
+      expect(res.body).toHaveProperty("error");
+      expect(res.body.error).toBe(
+        "Review content too long (max 2000 characters)"
+      );
+    });
   });
 
   describe("GET /reviews/:bookId", () => {
