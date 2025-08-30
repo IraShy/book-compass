@@ -32,12 +32,26 @@ async function createReview(req, res) {
       review: insertResult.rows[0],
     });
   } catch (err) {
+    if (err.code === "23514") {
+      // Check constraint violation
+      req.log.warn("Review content too long", {
+        userId: req.user?.userId,
+        bookId: req.body.bookId,
+        error: err.message,
+      });
+
+      return res
+        .status(400)
+        .json({ error: "Review content too long (max 2000 characters)" });
+    }
+
     req.log.error("Error creating review", {
       error: err.message,
       stack: err.stack,
       userId: req.user?.userId,
       bookId: req.body.bookId,
     });
+
     return res.status(500).json({ error: "Failed to create review" });
   }
 }

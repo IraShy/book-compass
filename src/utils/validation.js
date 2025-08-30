@@ -41,6 +41,13 @@ const validateRatingUtil = (rating) => {
   return null;
 };
 
+const validateContentUtil = (content) => {
+  if (content && typeof content === "string" && content.length > 2000) {
+    return "Review content too long (max 2000 characters)";
+  }
+  return null;
+};
+
 const sanitiseContent = (content) => {
   if (!content || typeof content !== "string") return null;
 
@@ -54,5 +61,6 @@ module.exports = {
   validateBookIdUtil,
   validateRatingUtil,
   validateBookExistsUtil,
+  validateContentUtil,
   sanitiseContent,
 };
