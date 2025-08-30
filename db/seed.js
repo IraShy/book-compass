@@ -37,6 +37,8 @@ async function seedDatabase() {
       { title: "1984", author: "George Orwell" },
       { title: "Pride and Prejudice", author: "Jane Austen" },
       { title: "The Hobbit", author: "J.R.R. Tolkien" },
+      { title: "To Kill a Mockingbird", author: "Harper Lee" },
+      { title: "The Great Gatsby", author: "F. Scott Fitzgerald" },
     ];
 
     const books = [];
@@ -117,6 +119,27 @@ async function seedDatabase() {
           rating: 6,
           content:
             "Impressive scope and imagination, but quite dense and slow-paced. The political machinations are complex, sometimes confusingly so. Herbert's world-building is undeniably detailed, but I found myself getting lost in the extensive terminology and religious concepts. Paul's character development is interesting, though I wished for more action sequences. Definitely a book that rewards careful reading.",
+        },
+        {
+          userId: bobId,
+          bookId: books[1]?.google_books_id, // 1984
+          rating: 10,
+          content:
+            "Absolutely brilliant and terrifying. This book changed how I think about government, media, and truth itself. The way Orwell shows how language can be manipulated to control thought is genius. Big Brother's surveillance state feels incredibly relevant today. Winston's final defeat is soul-crushing but necessary to show the complete power of totalitarianism. A masterpiece that everyone should read.",
+        },
+        {
+          userId: bobId,
+          bookId: books[4]?.google_books_id, // To Kill a Mockingbird
+          rating: 9,
+          content:
+            "Powerful and moving exploration of justice, morality, and growing up. Scout's perspective as a child witnessing adult prejudice is brilliantly handled. Atticus Finch is a compelling moral center, though complex. The trial scenes are gripping and heartbreaking. Lee tackles difficult themes with grace and nuance. Essential reading that stays with you long after finishing.",
+        },
+        {
+          userId: bobId,
+          bookId: books[5]?.google_books_id, // The Great Gatsby
+          rating: 8,
+          content:
+            "Beautiful prose and haunting portrayal of the American Dream's corruption. Fitzgerald's writing is lyrical and evocative. Gatsby's obsession with Daisy is both romantic and tragic. The symbolism is rich without being heavy-handed. Nick's narration provides the perfect lens into this decadent world. A masterclass in atmosphere and character development.",
         },
       ];
 
