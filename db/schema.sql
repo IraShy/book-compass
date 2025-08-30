@@ -21,9 +21,10 @@ CREATE TABLE reviews (
   user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
   book_id TEXT NULL REFERENCES books(google_books_id) ON DELETE SET NULL,
   rating INTEGER CHECK (rating BETWEEN 1 AND 10),
-  content TEXT,
+  content TEXT CHECK (LENGTH(content) <= 2000),
   created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW()
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE (user_id, book_id)
 );
 
 CREATE TABLE suggestions (
@@ -38,8 +39,7 @@ CREATE TABLE suggestions (
 CREATE TABLE reading_lists (
   id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-  -- TODO: fix constraint conflict: default + unique won't work
-  title TEXT DEFAULT 'To Read',
+  title TEXT NOT NULL CHECK (LENGTH(title) <= 50),
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW(),
   UNIQUE(user_id, title)
