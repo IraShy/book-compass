@@ -83,3 +83,6 @@ CREATE TABLE message_suggestions (
   book_id TEXT REFERENCES books(google_books_id) ON DELETE SET NULL,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+CREATE INDEX idx_reviews_user_id ON reviews(user_id);
+CREATE INDEX idx_suggestions_user_id ON suggestions(user_id);
