@@ -6,7 +6,7 @@ async function getRecommendations(userReviews) {
   const prompt = buildPrompt(userReviews);
 
   const response = await ai.models.generateContent({
-    model: "gemini-2.5-flash",
+    model: "gemini-1.5-flash",
     contents: prompt,
   });
 
@@ -15,13 +15,31 @@ async function getRecommendations(userReviews) {
 
 function buildPrompt(reviews) {
   const reviewText = reviews
-    .map((r) => `"${r.title}" (${r.rating}/10): ${r.content}`)
+    .map(
+      (r) =>
+        `"${r.title}" by ${r.authors.join(", ")} (${r.rating}/10): ${r.content}`
+    )
     .join("\n");
 
-  return `Based on these book reviews, suggest 3 books with brief reasons:
-${reviewText}
+  return `You are a book recommendation expert. Based on the provided reviews, suggest 3 different books that I would enjoy. The suggestions must be NEW and should NOT include any of the books mentioned below.
 
-Format the response with JSON in a Markdown code block: [{"title": "Book Title", "authors": "Author(s)", "reason": "Why recommended"}]. Please do not include any other text outside the code block.`;
+  ---
+
+  REVIEWS:
+  ${reviewText}
+
+  ---
+
+  Respond with JSON only. No other text. No markdown formatting.
+
+  Example JSON output:
+  [
+    {
+      "title": "A New Title",
+      "authors": "The Author(s)",
+      "reason": "This book shares similar themes and writing style to the books you enjoy."
+    }
+  ]`;
 }
 
 function parseAIResponse(rawResponse) {
