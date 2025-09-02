@@ -86,3 +86,4 @@ CREATE TABLE message_suggestions (
 
 CREATE INDEX idx_reviews_user_id ON reviews(user_id);
 CREATE INDEX idx_suggestions_user_id ON suggestions(user_id);
+CREATE INDEX idx_books_title_authors ON books(title, authors);
