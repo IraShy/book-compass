@@ -36,7 +36,7 @@ function buildPrompt(reviews) {
   [
     {
       "title": "A New Title",
-      "authors": "The Author(s)",
+      "authors": "Author 1, Author 2",
       "reason": "This book shares similar themes and writing style to the books you enjoy."
     }
   ]`;
