@@ -4,8 +4,12 @@ const {
   getRecommendations,
   parseAIResponse,
 } = require("../services/llm-service");
+const {
+  getCachedBook,
+  setCachedBook,
+  getCacheContents,
+} = require("../services/bookCacheService");
 
-const bookCache = new Map();
 const MIN_REVIEWS = 3;
 const REVIEWS_FOR_GENERATION = 10;
 
@@ -80,18 +84,14 @@ async function generateRecommendations(req, res) {
       recommendations.map(async (rec) => {
         const bookStartTime = Date.now();
         try {
-          const authorsStr = Array.isArray(rec.authors)
-            ? rec.authors.join(",")
-            : rec.authors || "";
-          const cacheKey = `${rec.title.toLowerCase()}_${authorsStr.toLowerCase()}`;
-
-          let recommendedBook = bookCache.get(cacheKey);
+          let recommendedBook = getCachedBook(rec.title, rec.authors);
 
           if (recommendedBook) {
             req.log.info(`Cache hit for "${rec.title}"`);
             req.log.info(
               `Processing "${rec.title}" took: ${Date.now() - bookStartTime}ms`
             );
+            req.log.debug("Cache:", getCacheContents());
             return { ...rec, bookId: recommendedBook.google_books_id };
           } else {
             const dbResult = await db.query(
@@ -108,7 +108,7 @@ async function generateRecommendations(req, res) {
 
             if (dbResult.rows.length > 0) {
               recommendedBook = dbResult.rows[0];
-              bookCache.set(cacheKey, recommendedBook);
+              setCachedBook(rec.title, rec.authors, recommendedBook);
               req.log.info(`DB hit for "${rec.title}"`);
               req.log.info(
                 `Processing "${rec.title}" took: ${
@@ -128,7 +128,8 @@ async function generateRecommendations(req, res) {
               );
 
               if (recommendedBook) {
-                bookCache.set(cacheKey, recommendedBook);
+                setCachedBook(rec.title, rec.authors, recommendedBook);
+
                 await db.query(
                   `INSERT INTO books (google_books_id, title, authors, description)
                    VALUES ($1, $2, $3, $4)
@@ -205,7 +206,9 @@ async function generateRecommendations(req, res) {
       error: error.message,
       stack: error.stack,
     });
-    res.status(500).json({ error: "Failed to generate recommendations" });
+    res
+      .status(500)
+      .json({ error: error.message || "Failed to generate recommendations" });
   }
 }
 
