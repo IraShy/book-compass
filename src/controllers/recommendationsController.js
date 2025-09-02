@@ -5,6 +5,9 @@ const {
   parseAIResponse,
 } = require("../services/llm-service");
 
+const MIN_REVIEWS = 3;
+const REVIEWS_FOR_GENERATION = 10;
+
 async function fetchAllRecommendations(req, res) {
   try {
     const userId = req.user.userId;
@@ -39,14 +42,14 @@ async function generateRecommendations(req, res) {
        JOIN books b ON r.book_id = b.google_books_id
        WHERE r.user_id = $1
        ORDER BY r.created_at DESC
-       LIMIT 10`,
+       LIMIT ${REVIEWS_FOR_GENERATION}`,
       [userId]
     );
 
-    if (reviewsResult.rows.length < 2) {
+    if (reviewsResult.rows.length < MIN_REVIEWS) {
       req.log.debug("Not enough reviews found for user", { userId });
       return res.status(400).json({
-        error: "Need at least 2 reviews to generate recommendations",
+        error: `Need at least ${MIN_REVIEWS} reviews to generate recommendations`,
       });
     }
 
