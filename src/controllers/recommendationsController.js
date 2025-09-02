@@ -5,6 +5,7 @@ const {
   parseAIResponse,
 } = require("../services/llm-service");
 
+const bookCache = new Map();
 const MIN_REVIEWS = 3;
 const REVIEWS_FOR_GENERATION = 10;
 
@@ -34,6 +35,7 @@ async function fetchAllRecommendations(req, res) {
 
 async function generateRecommendations(req, res) {
   try {
+    const startTime = Date.now();
     const userId = req.user.userId;
 
     const reviewsResult = await db.query(
@@ -58,8 +60,12 @@ async function generateRecommendations(req, res) {
       reviewCount: reviewsResult.rows.length,
     });
 
+    // LLM call
+    const llmStart = Date.now();
     const rawResult = await getRecommendations(reviewsResult.rows);
     const recommendations = parseAIResponse(rawResult);
+    const llmTime = Date.now() - llmStart;
+    req.log.info(`LLM call took: ${llmTime}ms`);
 
     if (!recommendations || recommendations.length === 0) {
       req.log.warn("Gemini returned no recommendations.", { rawResult });
@@ -68,28 +74,86 @@ async function generateRecommendations(req, res) {
       });
     }
 
+    // Book processing
+    const bookStart = Date.now();
     const processedRecommendations = await Promise.all(
       recommendations.map(async (rec) => {
+        const bookStartTime = Date.now();
         try {
-          const googleBook = await fetchBookFromGoogle(rec.title, rec.authors);
-          if (!googleBook) {
-            req.log.warn(`Could not find book on Google: ${rec.title}`);
-            return null;
+          const authorsStr = Array.isArray(rec.authors)
+            ? rec.authors.join(",")
+            : rec.authors || "";
+          const cacheKey = `${rec.title.toLowerCase()}_${authorsStr.toLowerCase()}`;
+
+          let recommendedBook = bookCache.get(cacheKey);
+
+          if (recommendedBook) {
+            req.log.info(`Cache hit for "${rec.title}"`);
+            req.log.info(
+              `Processing "${rec.title}" took: ${Date.now() - bookStartTime}ms`
+            );
+            return { ...rec, bookId: recommendedBook.google_books_id };
+          } else {
+            const dbResult = await db.query(
+              `SELECT google_books_id, title, authors, description 
+               FROM books 
+               WHERE title = $1 AND authors @> $2`,
+              [
+                rec.title,
+                Array.isArray(rec.authors)
+                  ? rec.authors
+                  : rec.authors.split(", "),
+              ]
+            );
+
+            if (dbResult.rows.length > 0) {
+              recommendedBook = dbResult.rows[0];
+              bookCache.set(cacheKey, recommendedBook);
+              req.log.info(`DB hit for "${rec.title}"`);
+              req.log.info(
+                `Processing "${rec.title}" took: ${
+                  Date.now() - bookStartTime
+                }ms`
+              );
+              return { ...rec, bookId: recommendedBook.google_books_id };
+            } else {
+              const apiStart = Date.now();
+              recommendedBook = await fetchBookFromGoogle(
+                rec.title,
+                rec.authors
+              );
+              const apiTime = Date.now() - apiStart;
+              req.log.info(
+                `Google Books API call for "${rec.title}" took: ${apiTime}ms`
+              );
+
+              if (recommendedBook) {
+                bookCache.set(cacheKey, recommendedBook);
+                await db.query(
+                  `INSERT INTO books (google_books_id, title, authors, description)
+                   VALUES ($1, $2, $3, $4)
+                   ON CONFLICT (google_books_id) DO NOTHING`,
+                  [
+                    recommendedBook.google_books_id,
+                    recommendedBook.title,
+                    recommendedBook.authors,
+                    recommendedBook.description,
+                  ]
+                );
+                req.log.info(
+                  `Processing "${rec.title}" took: ${
+                    Date.now() - bookStartTime
+                  }ms`
+                );
+                return { ...rec, bookId: recommendedBook.google_books_id };
+              }
+
+              if (!recommendedBook) {
+                req.log.warn(`Could not find book on Google: ${rec.title}`);
+                return null;
+              }
+            }
           }
-
-          await db.query(
-            `INSERT INTO books (google_books_id, title, authors, description)
-             VALUES ($1, $2, $3, $4)
-             ON CONFLICT (google_books_id) DO NOTHING`,
-            [
-              googleBook.google_books_id,
-              googleBook.title,
-              googleBook.authors,
-              googleBook.description,
-            ]
-          );
-
-          return { ...rec, bookId: googleBook.google_books_id };
         } catch (error) {
           req.log.warn(`Failed to process book: ${rec.title}`, {
             error: error.message,
@@ -98,6 +162,9 @@ async function generateRecommendations(req, res) {
         }
       })
     );
+
+    const bookTime = Date.now() - bookStart;
+    req.log.info(`All book processing took: ${bookTime}ms`);
 
     const validRecommendations = processedRecommendations.filter(
       (rec) => rec !== null
@@ -123,14 +190,21 @@ async function generateRecommendations(req, res) {
       } catch (insertError) {
         req.log.error("Failed to insert suggestions", {
           error: insertError.message,
+          stack: insertError.stack,
         });
         throw insertError;
       }
     }
 
+    const totalTime = Date.now() - startTime;
+    req.log.info(`Total recommendation generation took: ${totalTime}ms`);
+
     res.status(200).json({ recommendations: validRecommendations });
   } catch (error) {
-    req.log.error("Recommendation generation failed", { error: error.message });
+    req.log.error("Recommendation generation failed", {
+      error: error.message,
+      stack: error.stack,
+    });
     res.status(500).json({ error: "Failed to generate recommendations" });
   }
 }
