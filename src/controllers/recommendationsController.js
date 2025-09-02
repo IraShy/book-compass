@@ -108,7 +108,7 @@ async function generateRecommendations(req, res) {
         validRecommendations.forEach((rec, index) => {
           const offset = index * 3;
           placeholders.push(`($${offset + 1}, $${offset + 2}, $${offset + 3})`);
-          values.push(userId, rec.bookId, rec.reason);
+          values.push(userId, rec.google_books_id, rec.reason);
         });
 
         await db.query(
