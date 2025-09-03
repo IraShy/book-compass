@@ -55,9 +55,7 @@ async function loginUser(req, res) {
     const { email, password } = req.body;
     const normalizedEmail = email.toLowerCase();
 
-    const result = await db.query("SELECT * FROM users WHERE email = $1", [
-      normalizedEmail,
-    ]);
+    const result = await db.query("SELECT * FROM users WHERE email = $1", [normalizedEmail]);
 
     const user = result.rows[0];
     if (!user) {
@@ -121,9 +119,7 @@ async function viewUserProfile(req, res) {
       return res.status(401).json({ error: "Authentication required" });
     }
 
-    const result = await db.query("SELECT username FROM users WHERE id = $1", [
-      userId,
-    ]);
+    const result = await db.query("SELECT username FROM users WHERE id = $1", [userId]);
 
     if (result.rows.length === 0) {
       req.log.warn("Profile access attempt for non-existent user", { userId });

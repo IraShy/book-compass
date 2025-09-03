@@ -57,10 +57,10 @@ const checkDuplicateReview = async (req, res, next) => {
   const userId = req.user?.userId;
   const bookId = req.body.bookId;
 
-  const existingReview = await db.query(
-    "SELECT * FROM reviews WHERE user_id = $1 AND book_id = $2",
-    [userId, bookId]
-  );
+  const existingReview = await db.query("SELECT * FROM reviews WHERE user_id = $1 AND book_id = $2", [
+    userId,
+    bookId,
+  ]);
 
   if (existingReview.rows.length > 0) {
     req.log.warn("Duplicate review attempt", {
@@ -68,9 +68,7 @@ const checkDuplicateReview = async (req, res, next) => {
       bookId,
       reviewId: existingReview.rows[0].id,
     });
-    return res
-      .status(409)
-      .json({ error: "You have already reviewed this book" });
+    return res.status(409).json({ error: "You have already reviewed this book" });
   }
   next();
 };

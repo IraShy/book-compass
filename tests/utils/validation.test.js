@@ -8,11 +8,7 @@ const {
 describe("Validation Utils", () => {
   describe("validateEmailUtil", () => {
     test("valid emails", () => {
-      const validEmails = [
-        "test@example.com",
-        "user.name@domain.co.uk",
-        "test+tag@example.org",
-      ];
+      const validEmails = ["test@example.com", "user.name@domain.co.uk", "test+tag@example.org"];
 
       validEmails.forEach((email) => {
         expect(validateEmailUtil(email)).toBeNull();
@@ -45,12 +41,8 @@ describe("Validation Utils", () => {
     });
 
     test("invalid passwords", () => {
-      expect(validatePasswordUtil("short")).toBe(
-        "Password must be between 8 and 64 characters long"
-      );
-      expect(validatePasswordUtil("a".repeat(65))).toBe(
-        "Password must be between 8 and 64 characters long"
-      );
+      expect(validatePasswordUtil("short")).toBe("Password must be between 8 and 64 characters long");
+      expect(validatePasswordUtil("a".repeat(65))).toBe("Password must be between 8 and 64 characters long");
     });
   });
 
@@ -79,21 +71,11 @@ describe("Validation Utils", () => {
     });
 
     test("invalid ratings", () => {
-      expect(validateRatingUtil(0)).toBe(
-        "Rating must be an integer between 1 and 10"
-      );
-      expect(validateRatingUtil(11)).toBe(
-        "Rating must be an integer between 1 and 10"
-      );
-      expect(validateRatingUtil(null)).toBe(
-        "Rating must be an integer between 1 and 10"
-      );
-      expect(validateRatingUtil("5")).toBe(
-        "Rating must be an integer between 1 and 10"
-      );
-      expect(validateRatingUtil(5.5)).toBe(
-        "Rating must be an integer between 1 and 10"
-      );
+      expect(validateRatingUtil(0)).toBe("Rating must be an integer between 1 and 10");
+      expect(validateRatingUtil(11)).toBe("Rating must be an integer between 1 and 10");
+      expect(validateRatingUtil(null)).toBe("Rating must be an integer between 1 and 10");
+      expect(validateRatingUtil("5")).toBe("Rating must be an integer between 1 and 10");
+      expect(validateRatingUtil(5.5)).toBe("Rating must be an integer between 1 and 10");
     });
   });
 });

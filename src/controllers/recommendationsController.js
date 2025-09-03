@@ -1,14 +1,7 @@
 const db = require("../../db");
 const { fetchBookFromGoogle } = require("../services/bookService");
-const {
-  getRecommendations,
-  parseAIResponse,
-} = require("../services/llm-service");
-const {
-  getCachedBook,
-  setCachedBook,
-  getCacheContents,
-} = require("../services/bookCacheService");
+const { getRecommendations, parseAIResponse } = require("../services/llm-service");
+const { getCachedBook, setCachedBook, getCacheContents } = require("../services/bookCacheService");
 
 const MIN_REVIEWS = 3;
 const REVIEWS_FOR_GENERATION = 10;
@@ -88,9 +81,7 @@ async function generateRecommendations(req, res) {
 
           if (recommendedBook) {
             req.log.info(`Cache hit for "${rec.title}"`);
-            req.log.info(
-              `Processing "${rec.title}" took: ${Date.now() - bookStartTime}ms`
-            );
+            req.log.info(`Processing "${rec.title}" took: ${Date.now() - bookStartTime}ms`);
             req.log.debug("Cache:", getCacheContents());
             return { ...rec, bookId: recommendedBook.google_books_id };
           } else {
@@ -98,34 +89,20 @@ async function generateRecommendations(req, res) {
               `SELECT google_books_id, title, authors, description 
                FROM books 
                WHERE title = $1 AND authors @> $2`,
-              [
-                rec.title,
-                Array.isArray(rec.authors)
-                  ? rec.authors
-                  : rec.authors.split(", "),
-              ]
+              [rec.title, Array.isArray(rec.authors) ? rec.authors : rec.authors.split(", ")]
             );
 
             if (dbResult.rows.length > 0) {
               recommendedBook = dbResult.rows[0];
               setCachedBook(rec.title, rec.authors, recommendedBook);
               req.log.info(`DB hit for "${rec.title}"`);
-              req.log.info(
-                `Processing "${rec.title}" took: ${
-                  Date.now() - bookStartTime
-                }ms`
-              );
+              req.log.info(`Processing "${rec.title}" took: ${Date.now() - bookStartTime}ms`);
               return { ...rec, bookId: recommendedBook.google_books_id };
             } else {
               const apiStart = Date.now();
-              recommendedBook = await fetchBookFromGoogle(
-                rec.title,
-                rec.authors
-              );
+              recommendedBook = await fetchBookFromGoogle(rec.title, rec.authors);
               const apiTime = Date.now() - apiStart;
-              req.log.info(
-                `Google Books API call for "${rec.title}" took: ${apiTime}ms`
-              );
+              req.log.info(`Google Books API call for "${rec.title}" took: ${apiTime}ms`);
 
               if (recommendedBook) {
                 setCachedBook(rec.title, rec.authors, recommendedBook);
@@ -141,11 +118,7 @@ async function generateRecommendations(req, res) {
                     recommendedBook.description,
                   ]
                 );
-                req.log.info(
-                  `Processing "${rec.title}" took: ${
-                    Date.now() - bookStartTime
-                  }ms`
-                );
+                req.log.info(`Processing "${rec.title}" took: ${Date.now() - bookStartTime}ms`);
                 return { ...rec, bookId: recommendedBook.google_books_id };
               }
 
@@ -167,9 +140,7 @@ async function generateRecommendations(req, res) {
     const bookTime = Date.now() - bookStart;
     req.log.info(`All book processing took: ${bookTime}ms`);
 
-    const validRecommendations = processedRecommendations.filter(
-      (rec) => rec !== null
-    );
+    const validRecommendations = processedRecommendations.filter((rec) => rec !== null);
 
     if (validRecommendations.length > 0) {
       try {
@@ -206,9 +177,7 @@ async function generateRecommendations(req, res) {
       error: error.message,
       stack: error.stack,
     });
-    res
-      .status(500)
-      .json({ error: error.message || "Failed to generate recommendations" });
+    res.status(500).json({ error: error.message || "Failed to generate recommendations" });
   }
 }
 

@@ -105,12 +105,8 @@ async function fetchBookFromGoogle(title, author = "") {
       const bTitleScore = getTitleMatchScore(bTitle, lowerTitle);
 
       // Calculate author match scores (only if author was provided)
-      const aAuthorScore = author
-        ? getAuthorMatchScore(aAuthors, lowerAuthor)
-        : 0;
-      const bAuthorScore = author
-        ? getAuthorMatchScore(bAuthors, lowerAuthor)
-        : 0;
+      const aAuthorScore = author ? getAuthorMatchScore(aAuthors, lowerAuthor) : 0;
+      const bAuthorScore = author ? getAuthorMatchScore(bAuthors, lowerAuthor) : 0;
 
       // Combined score with title having higher weight (multiply by 2)
       const aTotalScore = aTitleScore * 2 + aAuthorScore;

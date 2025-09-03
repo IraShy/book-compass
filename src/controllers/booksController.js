@@ -57,10 +57,9 @@ async function findOrAddBook(req, res) {
     });
 
     // 3. Check by google_books_id in the db
-    const existingByGoogleId = await db.query(
-      `SELECT * FROM books WHERE google_books_id = $1 LIMIT 1`,
-      [book.google_books_id]
-    );
+    const existingByGoogleId = await db.query(`SELECT * FROM books WHERE google_books_id = $1 LIMIT 1`, [
+      book.google_books_id,
+    ]);
 
     if (existingByGoogleId.rows.length > 0) {
       req.log.debug("Book already exists in database by Google Books ID");
@@ -80,9 +79,7 @@ async function findOrAddBook(req, res) {
       title: book.title,
     });
 
-    return res
-      .status(201)
-      .json({ source: "google_api", book: insertResult.rows[0] });
+    return res.status(201).json({ source: "google_api", book: insertResult.rows[0] });
   } catch (err) {
     if (err.code === "23505" && book?.google_books_id) {
       req.log.warn("Duplicate book insertion attempt", {
@@ -90,10 +87,9 @@ async function findOrAddBook(req, res) {
       });
 
       try {
-        const fallback = await db.query(
-          `SELECT * FROM books WHERE google_books_id = $1`,
-          [book.google_books_id]
-        );
+        const fallback = await db.query(`SELECT * FROM books WHERE google_books_id = $1`, [
+          book.google_books_id,
+        ]);
         if (fallback.rows.length > 0) {
           return res.json({ source: "database", book: fallback.rows[0] });
         }

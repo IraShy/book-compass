@@ -18,16 +18,12 @@ describe("AuthService", () => {
       generateToken(mockRes, USER_ID);
 
       expect(mockRes.cookie).toHaveBeenCalledTimes(1);
-      expect(mockRes.cookie).toHaveBeenCalledWith(
-        "authToken",
-        expect.any(String),
-        {
-          httpOnly: true,
-          secure: false,
-          sameSite: "strict",
-          maxAge: 24 * 60 * 60 * 1000,
-        }
-      );
+      expect(mockRes.cookie).toHaveBeenCalledWith("authToken", expect.any(String), {
+        httpOnly: true,
+        secure: false,
+        sameSite: "strict",
+        maxAge: 24 * 60 * 60 * 1000,
+      });
 
       const tokenCall = mockRes.cookie.mock.calls[0];
       const token = tokenCall[1];

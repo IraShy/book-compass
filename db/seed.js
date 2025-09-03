@@ -52,30 +52,19 @@ async function seedDatabase() {
           `INSERT INTO books (google_books_id, title, authors, description)
            VALUES ($1, $2, $3, $4)
            ON CONFLICT (google_books_id) DO NOTHING`,
-          [
-            googleBook.google_books_id,
-            googleBook.title,
-            googleBook.authors,
-            googleBook.description,
-          ]
+          [googleBook.google_books_id, googleBook.title, googleBook.authors, googleBook.description]
         );
 
         books.push(googleBook);
-        console.log(
-          `Added: ${googleBook.title} (ID: ${googleBook.google_books_id})`
-        );
+        console.log(`Added: ${googleBook.title} (ID: ${googleBook.google_books_id})`);
         console.log();
       } else {
         console.log(`Could not find: ${search.title}`);
       }
     }
 
-    const aliceResult = await db.query(
-      "SELECT id FROM users WHERE email = 'alice@example.com'"
-    );
-    const bobResult = await db.query(
-      "SELECT id FROM users WHERE email = 'bob@example.com'"
-    );
+    const aliceResult = await db.query("SELECT id FROM users WHERE email = 'alice@example.com'");
+    const bobResult = await db.query("SELECT id FROM users WHERE email = 'bob@example.com'");
 
     const aliceId = aliceResult.rows[0]?.id;
     const bobId = bobResult.rows[0]?.id;

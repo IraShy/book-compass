@@ -7,11 +7,9 @@ const baseUrl = "/api/reviews";
 
 let testUserId, testBookId, cookies;
 
-const postReview = (data) =>
-  request(app).post(baseUrl).set("Cookie", cookies).send(data);
+const postReview = (data) => request(app).post(baseUrl).set("Cookie", cookies).send(data);
 
-const fetchReview = () =>
-  request(app).get(`${baseUrl}/${testBookId}`).set("Cookie", cookies);
+const fetchReview = () => request(app).get(`${baseUrl}/${testBookId}`).set("Cookie", cookies);
 
 describe("Reviews routes", () => {
   beforeAll(async () => {
@@ -188,9 +186,7 @@ describe("Reviews routes", () => {
 
       expect(res.statusCode).toBe(400);
       expect(res.body).toHaveProperty("error");
-      expect(res.body.error).toBe(
-        "Review content too long (max 2000 characters)"
-      );
+      expect(res.body.error).toBe("Review content too long (max 2000 characters)");
     });
   });
 
@@ -230,19 +226,19 @@ describe("Reviews routes", () => {
     });
 
     it("should return 404 when book does not exist", async () => {
-      const res = await request(app)
-        .get(`${baseUrl}/doesntExist`)
-        .set("Cookie", cookies);
+      const res = await request(app).get(`${baseUrl}/doesntExist`).set("Cookie", cookies);
 
       expect(res.statusCode).toBe(404);
       expect(res.body.error).toBe("Book not found");
     });
 
     it("should not return other users' reviews", async () => {
-      await db.query(
-        "INSERT INTO reviews (user_id, book_id, rating, content) VALUES ($1, $2, $3, $4)",
-        [otherUserId, testBookId, 3, "Other user's review"]
-      );
+      await db.query("INSERT INTO reviews (user_id, book_id, rating, content) VALUES ($1, $2, $3, $4)", [
+        otherUserId,
+        testBookId,
+        3,
+        "Other user's review",
+      ]);
 
       const res = await fetchReview();
 
@@ -252,8 +248,7 @@ describe("Reviews routes", () => {
   });
 
   describe("GET /reviews", () => {
-    const getAllReviews = () =>
-      request(app).get(baseUrl).set("Cookie", cookies);
+    const getAllReviews = () => request(app).get(baseUrl).set("Cookie", cookies);
 
     it("should return all user's reviews with book details", async () => {
       await postReview({ bookId: testBookId, rating: 5, content: "Great!" });
@@ -305,10 +300,12 @@ describe("Reviews routes", () => {
       await postReview({ bookId: testBookId, rating: 5, content: "My review" });
 
       // Create review for another user
-      await db.query(
-        "INSERT INTO reviews (user_id, book_id, rating, content) VALUES ($1, $2, $3, $4)",
-        [otherUserId, testBookId, 3, "New user's review"]
-      );
+      await db.query("INSERT INTO reviews (user_id, book_id, rating, content) VALUES ($1, $2, $3, $4)", [
+        otherUserId,
+        testBookId,
+        3,
+        "New user's review",
+      ]);
 
       const res = await getAllReviews();
 
@@ -373,9 +370,7 @@ describe("Reviews routes", () => {
     });
 
     it("should return 401 when not authenticated", async () => {
-      const res = await request(app)
-        .put(`${baseUrl}/${reviewId}`)
-        .send({ rating: 8 });
+      const res = await request(app).put(`${baseUrl}/${reviewId}`).send({ rating: 8 });
 
       expect(res.statusCode).toBe(401);
       expect(res.body.error).toBe("Authentication required");
@@ -392,9 +387,7 @@ describe("Reviews routes", () => {
       expect(res.statusCode).toBe(404);
       expect(res.body.error).toBe("Review not found");
 
-      const checkOther = await db.query("SELECT * FROM reviews WHERE id = $1", [
-        otherReview.rows[0].id,
-      ]);
+      const checkOther = await db.query("SELECT * FROM reviews WHERE id = $1", [otherReview.rows[0].id]);
       expect(checkOther.rows[0].rating).toBe(3);
     });
   });
@@ -402,8 +395,7 @@ describe("Reviews routes", () => {
   describe("DELETE /reviews/:reviewId", () => {
     let reviewId;
 
-    const deleteReview = (id = reviewId) =>
-      request(app).delete(`${baseUrl}/${id}`).set("Cookie", cookies);
+    const deleteReview = (id = reviewId) => request(app).delete(`${baseUrl}/${id}`).set("Cookie", cookies);
 
     beforeEach(async () => {
       const review = await postReview({
@@ -420,9 +412,7 @@ describe("Reviews routes", () => {
       expect(res.statusCode).toBe(204);
       expect(res.body).toEqual({});
 
-      const checkRes = await request(app)
-        .get(`${baseUrl}/${testBookId}`)
-        .set("Cookie", cookies);
+      const checkRes = await request(app).get(`${baseUrl}/${testBookId}`).set("Cookie", cookies);
 
       expect(checkRes.statusCode).toBe(404);
       expect(checkRes.body.error).toBe("Review not found");
@@ -453,9 +443,7 @@ describe("Reviews routes", () => {
       expect(res.statusCode).toBe(404);
       expect(res.body.error).toBe("Review not found");
 
-      const checkOther = await db.query("SELECT * FROM reviews WHERE id = $1", [
-        otherReview.rows[0].id,
-      ]);
+      const checkOther = await db.query("SELECT * FROM reviews WHERE id = $1", [otherReview.rows[0].id]);
       expect(checkOther.rows).toHaveLength(1);
     });
   });

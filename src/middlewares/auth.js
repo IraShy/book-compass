@@ -1,8 +1,5 @@
 const jwt = require("jsonwebtoken");
-const {
-  validateEmailUtil,
-  validatePasswordUtil,
-} = require("../utils/validation");
+const { validateEmailUtil, validatePasswordUtil } = require("../utils/validation");
 
 /**
  * Middleware to authenticate JWT token

@@ -16,8 +16,7 @@ if (!fs.existsSync(logDir)) {
 }
 
 const logLevel = process.env.NODE_ENV === "production" ? "info" : "debug";
-const consoleLogLevel =
-  process.env.NODE_ENV === "production" ? "warn" : "debug";
+const consoleLogLevel = process.env.NODE_ENV === "production" ? "warn" : "debug";
 
 const getUTCTimestamp = () => {
   return new Date().toISOString().replace("T", " ").substring(0, 19);

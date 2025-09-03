@@ -3,8 +3,7 @@ const app = require("../../src/app");
 const db = require("../../db");
 
 const baseUrl = "/api/users";
-const registerUser = (data) =>
-  request(app).post(`${baseUrl}/register`).send(data);
+const registerUser = (data) => request(app).post(`${baseUrl}/register`).send(data);
 const loginUser = (data) => request(app).post(`${baseUrl}/login`).send(data);
 
 beforeEach(async () => {
@@ -32,9 +31,7 @@ describe("User routes", () => {
       expect(res.headers["set-cookie"]).toBeDefined();
       expect(res.headers["set-cookie"][0]).toMatch(/authToken=/);
 
-      const user = await db.query(
-        "SELECT * FROM users WHERE email = 'testuser1@example.com'"
-      );
+      const user = await db.query("SELECT * FROM users WHERE email = 'testuser1@example.com'");
 
       expect(user.rows[0]).toMatchObject({
         username: "test username",
@@ -81,10 +78,7 @@ describe("User routes", () => {
         password: "short",
       });
       expect(res.statusCode).toBe(401);
-      expect(res.body).toHaveProperty(
-        "error",
-        "Password must be between 8 and 64 characters long"
-      );
+      expect(res.body).toHaveProperty("error", "Password must be between 8 and 64 characters long");
     });
 
     test("long password", async () => {
@@ -93,10 +87,7 @@ describe("User routes", () => {
         password: "a".repeat(65),
       });
       expect(res.statusCode).toBe(401);
-      expect(res.body).toHaveProperty(
-        "error",
-        "Password must be between 8 and 64 characters long"
-      );
+      expect(res.body).toHaveProperty("error", "Password must be between 8 and 64 characters long");
     });
 
     test("duplicate email", async () => {
@@ -125,9 +116,7 @@ describe("User routes", () => {
       expect(res.statusCode).toBe(201);
       expect(res.body).toHaveProperty("username", "testuser3");
 
-      const user = await db.query(
-        "SELECT * FROM users WHERE email = 'testuser3@example.com'"
-      );
+      const user = await db.query("SELECT * FROM users WHERE email = 'testuser3@example.com'");
 
       expect(user.rows[0]).toMatchObject({
         username: "testuser3",
@@ -201,9 +190,7 @@ describe("User routes", () => {
       });
 
       const cookies = registerRes.headers["set-cookie"];
-      const res = await request(app)
-        .get("/api/users/profile")
-        .set("Cookie", cookies);
+      const res = await request(app).get("/api/users/profile").set("Cookie", cookies);
 
       expect(res.statusCode).toBe(200);
       expect(res.body).toHaveProperty("userId");
@@ -226,9 +213,7 @@ describe("User routes", () => {
       });
 
       const cookies = registerRes.headers["set-cookie"];
-      const res = await request(app)
-        .post("/api/users/logout")
-        .set("Cookie", cookies);
+      const res = await request(app).post("/api/users/logout").set("Cookie", cookies);
 
       expect(res.statusCode).toBe(200);
       expect(res.headers["set-cookie"]).toBeDefined();

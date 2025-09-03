@@ -1,8 +1,10 @@
 # Book Compass Backend
 
-> **Work in progress** - Core features are functional but the project is actively being developed and enhanced.
+> **Work in progress** - Core features are functional but the project is actively being developed and
+> enhanced.
 
-A RESTful API for personalised book recommendations powered by AI. Users can manage their book reviews and receive book suggestions based on their reading preferences.
+A RESTful API for personalised book recommendations powered by AI. Users can manage their book reviews and
+receive book suggestions based on their reading preferences.
 
 ## Features
 
@@ -229,7 +231,8 @@ cp .env.test_sample .env.test
 
 Update the `.env.test` file with your configuration.
 
-The `setup.sh` script creates both dev and test databases, so no additional database setup is needed for testing.
+The `setup.sh` script creates both dev and test databases, so no additional database setup is needed for
+testing.
 
 ### Run Tests
 

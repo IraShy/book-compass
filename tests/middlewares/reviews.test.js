@@ -1,11 +1,7 @@
 const request = require("supertest");
 const app = require("../../src/app");
 const db = require("../../db");
-const {
-  validateBookId,
-  validateRating,
-  checkDuplicateReview,
-} = require("../../src/middlewares/reviews");
+const { validateBookId, validateRating, checkDuplicateReview } = require("../../src/middlewares/reviews");
 
 describe("Review Middlewares", () => {
   let testUserId, testBookId;
@@ -242,10 +238,12 @@ describe("Review Middlewares", () => {
 
     it("should return 409 when review already exists", async () => {
       // Create existing review
-      await db.query(
-        "INSERT INTO reviews (user_id, book_id, rating, content) VALUES ($1, $2, $3, $4)",
-        [testUserId, testBookId, 5, "Existing review"]
-      );
+      await db.query("INSERT INTO reviews (user_id, book_id, rating, content) VALUES ($1, $2, $3, $4)", [
+        testUserId,
+        testBookId,
+        5,
+        "Existing review",
+      ]);
 
       await checkDuplicateReview(req, res, next);
 
@@ -265,10 +263,12 @@ describe("Review Middlewares", () => {
       const otherUserId = otherUserResult.rows[0].id;
 
       // Create review for other user
-      await db.query(
-        "INSERT INTO reviews (user_id, book_id, rating, content) VALUES ($1, $2, $3, $4)",
-        [otherUserId, testBookId, 5, "Other user's review"]
-      );
+      await db.query("INSERT INTO reviews (user_id, book_id, rating, content) VALUES ($1, $2, $3, $4)", [
+        otherUserId,
+        testBookId,
+        5,
+        "Other user's review",
+      ]);
 
       // Current user should still be able to review
       await checkDuplicateReview(req, res, next);

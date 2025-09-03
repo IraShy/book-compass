@@ -25,9 +25,7 @@ const validateBookIdUtil = (bookId) => {
 };
 
 const validateBookExistsUtil = async (bookId) => {
-  const res = await db.query("SELECT * FROM books WHERE google_books_id = $1", [
-    bookId,
-  ]);
+  const res = await db.query("SELECT * FROM books WHERE google_books_id = $1", [bookId]);
   if (res.rows.length === 0) {
     return "Book not found";
   }

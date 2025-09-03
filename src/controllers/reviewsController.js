@@ -39,9 +39,7 @@ async function createReview(req, res) {
         bookId: req.body.bookId,
       });
 
-      return res
-        .status(409)
-        .json({ error: "You have already reviewed this book" });
+      return res.status(409).json({ error: "You have already reviewed this book" });
     }
 
     if (err.code === "23514") {
@@ -52,9 +50,7 @@ async function createReview(req, res) {
         error: err.message,
       });
 
-      return res
-        .status(400)
-        .json({ error: "Review content too long (max 2000 characters)" });
+      return res.status(400).json({ error: "Review content too long (max 2000 characters)" });
     }
 
     req.log.error("Error creating review", {

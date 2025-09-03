@@ -9,9 +9,7 @@ const bookCache = new LRUCache({
 });
 
 function createCacheKey(title, authors) {
-  const authorsStr = Array.isArray(authors)
-    ? authors.sort().join(",")
-    : authors || "";
+  const authorsStr = Array.isArray(authors) ? authors.sort().join(",") : authors || "";
   return `${title.toLowerCase()}_${authorsStr.toLowerCase()}`;
 }
 
