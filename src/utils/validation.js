@@ -18,14 +18,16 @@ const validatePasswordUtil = (password) => {
 };
 
 const validateBookIdUtil = (bookId) => {
-  if (!bookId || !Number.isInteger(Number(bookId)) || Number(bookId) <= 0) {
+  if (!bookId || typeof bookId !== "string" || bookId.trim() === "") {
     return "Valid book ID is required";
   }
   return null;
 };
 
 const validateBookExistsUtil = async (bookId) => {
-  const res = await db.query("SELECT * FROM books WHERE id = $1", [bookId]);
+  const res = await db.query("SELECT * FROM books WHERE google_books_id = $1", [
+    bookId,
+  ]);
   if (res.rows.length === 0) {
     return "Book not found";
   }
@@ -34,7 +36,14 @@ const validateBookExistsUtil = async (bookId) => {
 
 const validateRatingUtil = (rating) => {
   if (!rating || !Number.isInteger(rating) || rating < 1 || rating > 10) {
-    return "Rating must be between 1 and 10";
+    return "Rating must be an integer between 1 and 10";
+  }
+  return null;
+};
+
+const validateContentUtil = (content) => {
+  if (content && typeof content === "string" && content.length > 2000) {
+    return "Review content too long (max 2000 characters)";
   }
   return null;
 };
@@ -52,5 +61,6 @@ module.exports = {
   validateBookIdUtil,
   validateRatingUtil,
   validateBookExistsUtil,
+  validateContentUtil,
   sanitiseContent,
 };

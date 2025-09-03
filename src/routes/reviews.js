@@ -11,6 +11,7 @@ const { authenticateToken } = require("../middlewares/auth");
 const {
   validateBookId,
   validateRating,
+  validateContent,
   checkDuplicateReview,
 } = require("../middlewares/reviews");
 
@@ -25,11 +26,12 @@ router.post(
   authenticateToken,
   validateBookId,
   validateRating,
+  validateContent,
   checkDuplicateReview,
   createReview
 );
 
-router.put("/:id", authenticateToken, validateRating, updateReview);
+router.put("/:id", authenticateToken, validateRating, validateContent, updateReview);
 
 router.delete("/:id", authenticateToken, deleteReview);
 

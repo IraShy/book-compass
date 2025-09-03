@@ -3,6 +3,7 @@ const {
   validateBookIdUtil,
   validateRatingUtil,
   validateBookExistsUtil,
+  validateContentUtil,
 } = require("../utils/validation");
 
 const validateBookId = async (req, res, next) => {
@@ -40,6 +41,18 @@ const validateRating = (req, res, next) => {
   next();
 };
 
+const validateContent = (req, res, next) => {
+  const error = validateContentUtil(req.body.content);
+  if (error) {
+    req.log.warn("Invalid content", {
+      contentLength: req.body.content?.length || 0,
+      error,
+    });
+    return res.status(400).json({ error });
+  }
+  next();
+};
+
 const checkDuplicateReview = async (req, res, next) => {
   const userId = req.user?.userId;
   const bookId = req.body.bookId;
@@ -65,5 +78,6 @@ const checkDuplicateReview = async (req, res, next) => {
 module.exports = {
   validateBookId,
   validateRating,
+  validateContent,
   checkDuplicateReview,
 };

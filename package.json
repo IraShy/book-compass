@@ -4,19 +4,23 @@
   "main": "index.js",
   "scripts": {
     "dev": "NODE_ENV=development node --watch src/index.js",
-    "test": "NODE_ENV=test jest --detectOpenHandles --forceExit"
+    "test": "NODE_ENV=test jest --detectOpenHandles --forceExit",
+    "seed": "node db/seed.js",
+    "seed:docker": "docker-compose exec server npm run seed"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@google/genai": "^1.15.0",
     "bcrypt": "^5.1.1",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
+    "lru-cache": "^11.1.0",
     "on-finished": "^2.4.1",
     "pg": "^8.15.1",
     "validator": "^13.15.0",

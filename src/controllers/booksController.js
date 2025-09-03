@@ -32,7 +32,7 @@ async function findOrAddBook(req, res) {
 
     if (localResult.rows.length > 0) {
       req.log.info("Book found in database", {
-        bookId: localResult.rows[0].id,
+        bookId: localResult.rows[0].google_books_id,
         title: localResult.rows[0].title,
       });
       return res.json({ source: "database", book: localResult.rows[0] });
@@ -76,8 +76,7 @@ async function findOrAddBook(req, res) {
     );
 
     req.log.info("New book added to database", {
-      bookId: insertResult.rows[0].id,
-      googleBooksId: book.google_books_id,
+      bookId: insertResult.rows[0].google_books_id,
       title: book.title,
     });
 

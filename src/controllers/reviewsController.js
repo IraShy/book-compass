@@ -32,12 +32,38 @@ async function createReview(req, res) {
       review: insertResult.rows[0],
     });
   } catch (err) {
+    if (err.code === "23505") {
+      // Unique constraint violation
+      req.log.warn("Duplicate review attempt", {
+        userId: req.user?.userId,
+        bookId: req.body.bookId,
+      });
+
+      return res
+        .status(409)
+        .json({ error: "You have already reviewed this book" });
+    }
+
+    if (err.code === "23514") {
+      // Check constraint violation
+      req.log.warn("Review content too long", {
+        userId: req.user?.userId,
+        bookId: req.body.bookId,
+        error: err.message,
+      });
+
+      return res
+        .status(400)
+        .json({ error: "Review content too long (max 2000 characters)" });
+    }
+
     req.log.error("Error creating review", {
       error: err.message,
       stack: err.stack,
       userId: req.user?.userId,
       bookId: req.body.bookId,
     });
+
     return res.status(500).json({ error: "Failed to create review" });
   }
 }
@@ -50,7 +76,7 @@ async function getReview(req, res) {
     const result = await db.query(
       `SELECT r.*, b.title, b.authors 
        FROM reviews r 
-       JOIN books b ON r.book_id = b.id 
+       JOIN books b ON r.book_id = b.google_books_id 
        WHERE r.user_id = $1 AND r.book_id = $2`,
       [userId, bookId]
     );
@@ -88,7 +114,7 @@ async function getAllReviews(req, res) {
     const result = await db.query(
       `SELECT r.*, b.title, b.authors 
        FROM reviews r 
-       JOIN books b ON r.book_id = b.id 
+       JOIN books b ON r.book_id = b.google_books_id 
        WHERE r.user_id = $1`,
       [userId]
     );
