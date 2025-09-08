@@ -93,6 +93,35 @@ describe("Reviews routes", () => {
       expect(res.body.review.content).toBe(null);
     });
 
+    it("should create a review without rating", async () => {
+      const reviewData = {
+        bookId: testBookId,
+        content: "Great book, but I don't do ratings",
+      };
+
+      const res = await postReview(reviewData);
+
+      expect(res.statusCode).toBe(201);
+      expect(res.body.review.rating).toBe(null);
+      expect(res.body.review.content).toBe(reviewData.content);
+    });
+
+    it("should create an empty review", async () => {
+      const reviewData = {
+        bookId: testBookId,
+      };
+
+      const res = await postReview(reviewData);
+
+      expect(res.statusCode).toBe(201);
+      expect(res.body.review).toHaveProperty("id");
+      expect(res.body.review.rating).toBe(null);
+      expect(res.body.review.content).toBe(null);
+      expect(res.body.review.user_id).toBe(testUserId);
+      expect(res.body.review.book_id).toBe(testBookId);
+      expect(res.body.review).toHaveProperty("created_at");
+    });
+
     it("should return 401 if user is not authenticated", async () => {
       const reviewData = {
         bookId: testBookId,

@@ -33,7 +33,7 @@ const validateBookExistsUtil = async (bookId) => {
 };
 
 const validateRatingUtil = (rating) => {
-  if (!rating || !Number.isInteger(rating) || rating < 1 || rating > 10) {
+  if ((Number.isInteger(rating) && (rating < 1 || rating > 10)) || (rating && !Number.isInteger(rating))) {
     return "Rating must be an integer between 1 and 10";
   }
   return null;

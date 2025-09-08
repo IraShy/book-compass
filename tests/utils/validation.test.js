@@ -68,12 +68,12 @@ describe("Validation Utils", () => {
       for (let i = 1; i <= 10; i++) {
         expect(validateRatingUtil(i)).toBeNull();
       }
+      expect(validateRatingUtil(undefined)).toBeNull();
     });
 
     test("invalid ratings", () => {
       expect(validateRatingUtil(0)).toBe("Rating must be an integer between 1 and 10");
       expect(validateRatingUtil(11)).toBe("Rating must be an integer between 1 and 10");
-      expect(validateRatingUtil(null)).toBe("Rating must be an integer between 1 and 10");
       expect(validateRatingUtil("5")).toBe("Rating must be an integer between 1 and 10");
       expect(validateRatingUtil(5.5)).toBe("Rating must be an integer between 1 and 10");
     });

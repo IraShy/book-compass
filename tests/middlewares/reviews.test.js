@@ -189,14 +189,10 @@ describe("Review Middlewares", () => {
       expect(next).not.toHaveBeenCalled();
     });
 
-    it("should return 400 for missing rating", () => {
+    it("should return null for missing rating", () => {
       validateRating(req, res, next);
 
-      expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({
-        error: "Rating must be an integer between 1 and 10",
-      });
-      expect(next).not.toHaveBeenCalled();
+      expect(next).toHaveBeenCalled();
     });
 
     it("should log warnings for invalid ratings", () => {
