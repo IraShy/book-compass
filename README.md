@@ -75,6 +75,7 @@ receive book suggestions based on their reading preferences.
 
 - Docker containerisation
 - CI/CD pipeline with GitHub Actions and Render
+- Code quality tools: ESLint, Prettier, Husky pre-commit hooks
 
 ## Prerequisites
 
@@ -214,6 +215,32 @@ npm run dev
 
 The server will start on port 8000 with auto-reload enabled.
 
+### Code Quality
+
+The project includes automated code quality tools:
+
+```bash
+# Format code
+npm run format
+
+# Check formatting
+npm run format:check
+
+# Lint code
+npm run lint
+
+# Auto-fix linting issues
+npm run lint:fix
+```
+
+**Pre-commit hooks** automatically run linting and tests before each commit to ensure code quality.
+
+**Skip hooks for documentation, config changes, etc.:**
+
+```bash
+git commit -m "commit message" -n
+```
+
 ### Health Checks
 
 - Server status: [http://localhost:8000/api/health](http://localhost:8000/api/health)
@@ -239,3 +266,5 @@ testing.
 ```bash
 npm test
 ```
+
+**Note:** Tests are automatically run as part of the pre-commit hooks and CI pipeline to ensure code quality.

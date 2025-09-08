@@ -56,6 +56,9 @@ jobs:
       - name: Check formatting
         run: npm run format:check
 
+      - name: Run linter
+        run: npm run lint
+
       - name: Create schema
         # Runs a script that creates a PostgreSQL table, populates
         # the table with data, and then retrieves the data

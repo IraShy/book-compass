@@ -7,11 +7,13 @@ const maxLogFiles = 5;
 
 const logDir = path.join(process.cwd(), "logs");
 
+// eslint-disable-next-line no-sync
 if (!fs.existsSync(logDir)) {
   try {
+    // eslint-disable-next-line no-sync
     fs.mkdirSync(logDir, { recursive: true });
   } catch (error) {
-    throw new Error("Log directory creation failed");
+    throw new Error("Log directory creation failed", { cause: error });
   }
 }
 
@@ -50,7 +52,7 @@ const jsonFormat = winston.format.combine(
 const consoleFormat = winston.format.combine(
   winston.format.colorize(),
   winston.format.timestamp({ format: getUTCTimestamp }),
-  winston.format.printf(({ timestamp, level, message, service, ...meta }) => {
+  winston.format.printf(({ timestamp, level, message, service: _, ...meta }) => {
     let msg = `${timestamp} [${level}]: ${message}`;
 
     if (Object.keys(meta).length > 0) {

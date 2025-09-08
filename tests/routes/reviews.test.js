@@ -5,7 +5,7 @@ const bcrypt = require("bcrypt");
 
 const baseUrl = "/api/reviews";
 
-let testUserId, testBookId, cookies;
+let testUserId, testBookId, cookies, otherUserId;
 
 const postReview = (data) => request(app).post(baseUrl).set("Cookie", cookies).send(data);
 
