@@ -39,6 +39,14 @@ async function seedDatabase() {
       { title: "The Hobbit", author: "J.R.R. Tolkien" },
       { title: "To Kill a Mockingbird", author: "Harper Lee" },
       { title: "The Great Gatsby", author: "F. Scott Fitzgerald" },
+      { title: "The Lord of the Rings", author: "J.R.R. Tolkien" },
+      { title: "Harry Potter and the Philosopher's Stone", author: "J.K. Rowling" },
+      { title: "The Catcher in the Rye", author: "J.D. Salinger" },
+      { title: "Brave New World", author: "Aldous Huxley" },
+      { title: "The Handmaid's Tale", author: "Margaret Atwood" },
+      { title: "Foundation", author: "Isaac Asimov" },
+      { title: "Neuromancer", author: "William Gibson" },
+      { title: "The Martian", author: "Andy Weir" },
     ];
 
     const books = [];
@@ -86,6 +94,62 @@ async function seedDatabase() {
           rating: 8,
           content:
             "Terrifyingly relevant dystopian masterpiece. Orwell's vision of totalitarian surveillance and thought control feels more prescient than ever. The concept of doublethink and newspeak is chilling. Winston's struggle against Big Brother is heartbreaking. While depressing, it's essential reading that makes you think deeply about freedom, truth, and the power of language to shape reality.",
+        },
+        {
+          userId: aliceId,
+          bookId: books[6]?.google_books_id, // The Lord of the Rings
+          rating: 10,
+          content:
+            "Epic fantasy masterpiece that sets the standard for the genre. Tolkien's world-building is unparalleled - Middle-earth feels completely real and lived-in. The friendship between Frodo and Sam is deeply moving. The scope is breathtaking, from intimate character moments to massive battles. Beautiful prose that ranges from simple and direct to poetic and mythic. A timeless adventure about courage, friendship, and hope.",
+        },
+        {
+          userId: aliceId,
+          bookId: books[7]?.google_books_id, // Harry Potter
+          rating: 8,
+          content:
+            "Magical and enchanting introduction to a wonderful world. Rowling creates a perfect blend of whimsy and danger. Hogwarts feels like a place you'd want to live. Harry's journey from unloved orphan to hero is compelling. The magic system is creative and fun. Great characters and friendships. While aimed at younger readers, it has depth and heart that appeals to all ages.",
+        },
+        {
+          userId: aliceId,
+          bookId: books[8]?.google_books_id, // The Catcher in the Rye
+          rating: 6,
+          content:
+            "Interesting character study but Holden's voice gets tiresome. Salinger captures teenage angst and alienation well, but the constant complaining becomes grating. Some profound insights about phoniness and growing up, but the plot meanders. The stream-of-consciousness style is effective but exhausting. Important for its cultural impact, though not entirely enjoyable to read.",
+        },
+        {
+          userId: aliceId,
+          bookId: books[9]?.google_books_id, // Brave New World
+          rating: 9,
+          content:
+            "Brilliant dystopian vision that complements 1984 perfectly. Huxley's world of pleasure and conditioning is more seductive and perhaps more realistic than Orwell's brutal oppression. The soma-dependent society and engineered happiness are chilling concepts. Bernard and John's struggles against conformity are compelling. Raises important questions about technology, happiness, and human nature.",
+        },
+        {
+          userId: aliceId,
+          bookId: books[10]?.google_books_id, // The Handmaid's Tale
+          rating: 8,
+          content:
+            "Powerful and disturbing feminist dystopia. Atwood's writing is sharp and evocative. Offred's situation is horrifying yet believable. The gradual revelation of how Gilead came to be is masterfully done. The oppression feels real and immediate. While difficult to read due to the subject matter, it's an important warning about extremism and women's rights.",
+        },
+        {
+          userId: aliceId,
+          bookId: books[11]?.google_books_id, // Foundation
+          rating: 7,
+          content:
+            "Fascinating concept of psychohistory and galactic empire. Asimov's ideas about predicting societal trends are brilliant. The scope spanning centuries is ambitious. However, the characters feel somewhat flat and the dialogue is dated. More focused on ideas than emotional depth. Important influence on science fiction, though the execution feels academic rather than engaging.",
+        },
+        {
+          userId: aliceId,
+          bookId: books[12]?.google_books_id, // Neuromancer
+          rating: 8,
+          content:
+            "Groundbreaking cyberpunk that defined a genre. Gibson's vision of cyberspace and AI is prescient and influential. The noir atmosphere in a high-tech world is perfectly executed. Case's journey through the matrix is thrilling. Dense with ideas and terminology that can be overwhelming but rewarding. Essential reading for understanding modern sci-fi and our relationship with technology.",
+        },
+        {
+          userId: aliceId,
+          bookId: books[13]?.google_books_id, // The Martian
+          rating: 9,
+          content:
+            "Incredibly engaging hard science fiction survival story. Weir makes complex science accessible and exciting. Mark Watney's humor and determination in the face of impossible odds is inspiring. The problem-solving approach is methodical and believable. Great balance of technical detail and human drama. Shows the best of human ingenuity and the power of science to overcome challenges.",
         },
         // Bob's reviews
         {
