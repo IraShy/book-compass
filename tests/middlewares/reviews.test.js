@@ -1,5 +1,3 @@
-const request = require("supertest");
-const app = require("../../src/app");
 const db = require("../../db");
 const { validateBookId, validateRating, checkDuplicateReview } = require("../../src/middlewares/reviews");
 

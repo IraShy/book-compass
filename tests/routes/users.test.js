@@ -16,7 +16,6 @@ afterAll(async () => {
 });
 
 describe("User routes", () => {
-  let token;
   describe("POST /register", () => {
     test("valid data", async () => {
       const res = await registerUser({

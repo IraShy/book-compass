@@ -1,7 +1,6 @@
 const express = require("express");
 const { decodeSearchParams } = require("../middlewares/decodeTitle");
 const { findOrAddBook } = require("../controllers/booksController");
-const { authenticateToken } = require("../middlewares/auth");
 
 const router = express.Router();
 

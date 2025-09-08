@@ -60,7 +60,7 @@ app.get("/ping-db", async (req, res) => {
 });
 
 // Global error handler
-app.use((err, req, res, next) => {
+app.use((err, req, res, _next) => {
   req.log.error("Unhandled error", {
     error: err.message,
     stack: err.stack,

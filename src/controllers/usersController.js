@@ -1,6 +1,4 @@
 const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken");
-const validator = require("validator");
 const db = require("../../db");
 const { generateToken } = require("../services/authService");
 
@@ -81,7 +79,7 @@ async function loginUser(req, res) {
 
     generateToken(res, user.id);
 
-    const { hashed_password, ...userWithoutPassword } = user;
+    const { hashed_password: _, ...userWithoutPassword } = user;
 
     res.json({ user: userWithoutPassword });
   } catch (err) {

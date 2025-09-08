@@ -5,8 +5,9 @@ const { fetchBookFromGoogle } = require("../services/bookService");
  * Find a book in the database or add it from Google Books API
  */
 async function findOrAddBook(req, res) {
+  let book;
+
   try {
-    let book;
     const logAuthor = req.decodedAuthor || "not provided";
 
     req.log.debug("Book search initiated", {
@@ -16,7 +17,7 @@ async function findOrAddBook(req, res) {
 
     // 1. Check by title and author (if provided) in the db
     let query = `SELECT * FROM books WHERE LOWER(title) = LOWER($1)`;
-    let params = [req.decodedTitle];
+    const params = [req.decodedTitle];
 
     // Add author condition if provided, with case-insensitive matching
     if (req.decodedAuthor) {
