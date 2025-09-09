@@ -7,6 +7,9 @@
     "test": "NODE_ENV=test jest --detectOpenHandles --forceExit",
     "seed": "node db/seed.js",
     "seed:docker": "docker-compose exec server npm run seed",
+    "db:link": "npx supabase link",
+    "db:push": "npx supabase db push",
+    "migration:new": "npx supabase migration new",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "eslint .",
@@ -45,6 +48,7 @@
     "jest": "^29.7.0",
     "lint-staged": "^16.1.6",
     "prettier": "^3.0.0",
+    "supabase": "^2.40.7",
     "supertest": "^7.1.0"
   }
 }
