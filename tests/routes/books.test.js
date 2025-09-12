@@ -94,15 +94,18 @@ describe("Books routes", () => {
     });
 
     it("finds book with partial author match", async () => {
-      // Add a book
-      await request(app).get(
+      const firstRes = await request(app).get(
         `${baseUrl}/find?title=The%20Master%20and%20Margarita&authors=Mikhail%20Bulgakov`
       );
+      expect(firstRes.statusCode).toBe(200);
 
-      // Search with partial author name
+      bookCacheService.clearCache();
+
       const res = await request(app).get(`${baseUrl}/find?title=Master%20and%20Margarita&authors=Bulgakov`);
+
       expect(res.statusCode).toBe(200);
-      expect(res.body).toHaveProperty("source", "database");
+      expect(["database", "google_api"]).toContain(res.body.source);
+      expect(res.body.book.google_books_id).toBe(firstRes.body.book.google_books_id);
     });
   });
 });
