@@ -81,7 +81,7 @@ async function loginUser(req, res) {
 
     const { hashed_password: _, ...userWithoutPassword } = user;
 
-    res.json({ user: userWithoutPassword });
+    res.status(200).json({ user: userWithoutPassword });
   } catch (err) {
     req.log.error("User login failed", {
       error: err.message,

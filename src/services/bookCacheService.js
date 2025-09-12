@@ -1,43 +1,52 @@
 const { LRUCache } = require("lru-cache");
+const logger = require("../utils/logger");
 
 const bookCache = new LRUCache({
   max: 10_000, // Max 10,000 books
   ttl: 1000 * 60 * 60 * 24 * 7 * 4, // 4 weeks
-  //   ttl: 1000 * 60,
+  // ttl: 1000 * 60,
   updateAgeOnGet: true,
   allowStale: false,
 });
 
-function createCacheKey(title, authors) {
-  const authorsStr = Array.isArray(authors) ? authors.sort().join(",") : authors || "";
-  return `${title.toLowerCase()}_${authorsStr.toLowerCase()}`;
+function normalizeString(str) {
+  return str
+    .trim()
+    .toLowerCase()
+    .replace(/[^\w\s]/g, "")
+    .replace(/\b(the|and|a|an)\b/g, "")
+    .replace(/\s+/g, " ");
 }
 
-function getCachedBook(title, authors) {
-  const key = createCacheKey(title, authors);
-  return bookCache.get(key);
+function createCacheKey(title, authors) {
+  const normalizedTitle = normalizeString(title);
+  const normalizedAuthors = authors.map(normalizeString).filter(Boolean).sort();
+  return `${normalizedTitle}|${normalizedAuthors.join("|")}`;
 }
 
 function setCachedBook(title, authors, bookData) {
   const key = createCacheKey(title, authors);
   bookCache.set(key, bookData);
+  logger.info("Book cached", { key });
 }
 
-function getCacheContents() {
-  const contents = [];
-  for (const [key, value] of bookCache.entries()) {
-    contents.push({
-      cacheKey: key,
-      title: value.title,
-      authors: value.authors,
-      remainingTTL: (bookCache.getRemainingTTL(key) / 1000).toFixed(0) + "s",
-    });
+function getCachedBook(title, authors) {
+  const searchKey = createCacheKey(title, authors);
+  const book = bookCache.get(searchKey);
+  if (book) {
+    logger.info("Book cache hit", { key: searchKey });
+  } else {
+    logger.info("Book cache miss", { key: searchKey });
   }
-  return contents;
+  return book;
+}
+
+function clearCache() {
+  bookCache.clear();
 }
 
 module.exports = {
   getCachedBook,
   setCachedBook,
-  getCacheContents,
+  clearCache,
 };

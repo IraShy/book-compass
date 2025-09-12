@@ -7,10 +7,10 @@
     "test": "NODE_ENV=test jest --detectOpenHandles --forceExit",
     "seed": "node db/seed.js",
     "seed:docker": "docker-compose exec server npm run seed",
-    "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "lint": "eslint .",
-    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "lint:check": "eslint .",
+    "lint": "eslint . --fix",
     "prepare": "husky || true"
   },
   "lint-staged": {

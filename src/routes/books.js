@@ -1,5 +1,5 @@
 const express = require("express");
-const { decodeSearchParams } = require("../middlewares/decodeTitle");
+const { decodeSearchParams } = require("../middlewares/bookParams");
 const { findOrAddBook } = require("../controllers/booksController");
 
 const router = express.Router();
