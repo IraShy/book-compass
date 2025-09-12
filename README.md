@@ -227,10 +227,10 @@ npm run format
 npm run format:check
 
 # Lint code
-npm run lint
+npm run lint:check
 
 # Auto-fix linting issues
-npm run lint:fix
+npm run lint
 ```
 
 **Pre-commit hooks** automatically run linting and tests before each commit to ensure code quality.
