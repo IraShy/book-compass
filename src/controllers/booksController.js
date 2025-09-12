@@ -1,114 +1,71 @@
-const db = require("../../db");
-const { fetchBookFromGoogle } = require("../services/bookService");
+const { getCachedBook, setCachedBook } = require("../services/bookCacheService");
+const { fetchBookFromGoogle, findBookInDatabase, saveBookToDatabase } = require("../services/bookService");
 
-/**
- * Find a book in the database or add it from Google Books API
- */
 async function findOrAddBook(req, res) {
-  let book;
+  const startTime = Date.now();
 
   try {
-    const logAuthor = req.decodedAuthor || "not provided";
+    const { decodedTitle: title, decodedAuthors: authors } = req;
 
-    req.log.debug("Book search initiated", {
-      title: req.decodedTitle,
-      author: logAuthor,
-    });
+    req.log.debug("Book search initiated", { title, authors });
 
-    // 1. Check by title and author (if provided) in the db
-    let query = `SELECT * FROM books WHERE LOWER(title) = LOWER($1)`;
-    const params = [req.decodedTitle];
-
-    // Add author condition if provided, with case-insensitive matching
-    if (req.decodedAuthor) {
-      query += ` AND EXISTS (
-        SELECT 1 FROM unnest(authors) AS author 
-        WHERE LOWER(author) = LOWER($2)
-      )`;
-      params.push(req.decodedAuthor);
+    // 1. Check cache
+    const cachedBook = getCachedBook(title, authors);
+    if (cachedBook) {
+      req.log.info("Book found in cache", {
+        id: cachedBook.google_books_id,
+        responseTime: Date.now() - startTime,
+      });
+      return res.status(200).json({ source: "cache", book: cachedBook });
     }
 
-    query += ` LIMIT 1`;
-    const localResult = await db.query(query, params);
-
-    if (localResult.rows.length > 0) {
+    // 2. Not in cache -> check database
+    const dbBook = await findBookInDatabase(title, authors);
+    if (dbBook) {
       req.log.info("Book found in database", {
-        bookId: localResult.rows[0].google_books_id,
-        title: localResult.rows[0].title,
+        id: dbBook.google_books_id,
+        title: dbBook.title,
+        authors: dbBook.authors,
+        responseTime: Date.now() - startTime,
       });
-      return res.json({ source: "database", book: localResult.rows[0] });
+
+      // Cache book data
+      setCachedBook(title, authors, dbBook);
+      return res.status(200).json({ source: "database", book: dbBook });
     }
 
-    // 2. If doesn't exist in the db, fetch from Google Books API
-    req.log.debug("Book not found in database, searching Google Books API");
+    // 3. Not in db -> fetch from Google Books API
+    req.log.info("Search Google Books API", { title, authors });
 
-    book = await fetchBookFromGoogle(req.decodedTitle, req.decodedAuthor);
-
-    if (!book) {
-      req.log.info("Book not found in Google Books API", {
-        title: req.decodedTitle,
-        author: logAuthor,
-      });
+    const googleBook = await fetchBookFromGoogle(title, authors);
+    if (!googleBook) {
+      req.log.warn("Book not found", { title, authors });
       return res.status(404).json({ error: "Book not found" });
     }
 
-    req.log.info("Book found in Google Books API", {
-      googleBooksId: book.google_books_id,
-      title: book.title,
-    });
-
-    // 3. Check by google_books_id in the db
-    const existingByGoogleId = await db.query(`SELECT * FROM books WHERE google_books_id = $1 LIMIT 1`, [
-      book.google_books_id,
-    ]);
-
-    if (existingByGoogleId.rows.length > 0) {
-      req.log.debug("Book already exists in database by Google Books ID");
-      return res.json({ source: "database", book: existingByGoogleId.rows[0] });
+    // 4. Save to database and cache
+    const savedBook = await saveBookToDatabase(googleBook);
+    if (!savedBook) {
+      req.log.error("Failed to save book to database", { googleBooksId: googleBook.google_books_id });
+      return res.status(500).json({ error: "Failed to save book" });
     }
 
-    // 4. Insert new book into db
-    const insertResult = await db.query(
-      `INSERT INTO books (google_books_id, title, authors, description)
-       VALUES ($1, $2, $3, $4)
-       RETURNING *`,
-      [book.google_books_id, book.title, book.authors, book.description]
-    );
-
-    req.log.info("New book added to database", {
-      bookId: insertResult.rows[0].google_books_id,
-      title: book.title,
+    req.log.info("New book added", {
+      googleBooksId: savedBook.google_books_id,
+      title: savedBook.title,
+      responseTime: Date.now() - startTime,
     });
 
-    return res.status(201).json({ source: "google_api", book: insertResult.rows[0] });
-  } catch (err) {
-    if (err.code === "23505" && book?.google_books_id) {
-      req.log.warn("Duplicate book insertion attempt", {
-        googleBooksId: book.google_books_id,
-      });
+    setCachedBook(title, authors, savedBook);
 
-      try {
-        const fallback = await db.query(`SELECT * FROM books WHERE google_books_id = $1`, [
-          book.google_books_id,
-        ]);
-        if (fallback.rows.length > 0) {
-          return res.json({ source: "database", book: fallback.rows[0] });
-        }
-      } catch (fallbackErr) {
-        req.log.error("Fallback query failed", {
-          error: fallbackErr.message,
-          googleBooksId: book.google_books_id,
-        });
-      }
-    }
-
-    req.log.error("Book search/add operation failed", {
-      error: err.message,
-      stack: err.stack,
+    return res.status(200).json({ source: "google_api", book: savedBook });
+  } catch (error) {
+    req.log.error("Book search failed", {
+      error: error.message,
+      stack: error.stack,
       title: req.decodedTitle,
-      author: req.decodedAuthor || "not provided",
+      authors: req.decodedAuthors,
     });
-
     return res.status(500).json({ error: "Failed to process book request" });
   }
 }
