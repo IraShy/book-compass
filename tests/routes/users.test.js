@@ -25,8 +25,8 @@ describe("User routes", () => {
       });
 
       expect(res.statusCode).toBe(201);
-      expect(res.body).toHaveProperty("email", "testuser1@example.com");
-      expect(res.body).toHaveProperty("username", "test username");
+      expect(res.body.user).toHaveProperty("email", "testuser1@example.com");
+      expect(res.body.user).toHaveProperty("username", "test username");
       expect(res.headers["set-cookie"]).toBeDefined();
       expect(res.headers["set-cookie"][0]).toMatch(/authToken=/);
 
@@ -113,7 +113,7 @@ describe("User routes", () => {
       });
 
       expect(res.statusCode).toBe(201);
-      expect(res.body).toHaveProperty("username", "testuser3");
+      expect(res.body.user).toHaveProperty("username", "testuser3");
 
       const user = await db.query("SELECT * FROM users WHERE email = 'testuser3@example.com'");
 
