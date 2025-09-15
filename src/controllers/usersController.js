@@ -28,7 +28,7 @@ async function registerUser(req, res) {
       username,
     });
 
-    res.status(201).json(result.rows[0]);
+    res.status(201).json({ user: result.rows[0] });
   } catch (err) {
     if (err.code === "23505") {
       // Unique violation (duplicate email)
