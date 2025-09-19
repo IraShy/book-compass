@@ -192,8 +192,9 @@ describe("User routes", () => {
       const res = await request(app).get("/api/users/profile").set("Cookie", cookies);
 
       expect(res.statusCode).toBe(200);
-      expect(res.body).toHaveProperty("userId");
-      expect(res.body).toHaveProperty("username", "testuser1");
+      expect(res.body.user).toHaveProperty("userId");
+      expect(res.body.user).toHaveProperty("username", "testuser1");
+      expect(res.body.user).toHaveProperty("email", "testuser1@example.com");
     });
 
     test("no authentication", async () => {
