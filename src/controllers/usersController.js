@@ -117,17 +117,18 @@ async function viewUserProfile(req, res) {
       return res.status(401).json({ error: "Authentication required" });
     }
 
-    const result = await db.query("SELECT username FROM users WHERE id = $1", [userId]);
+    const result = await db.query("SELECT username, email, created_at FROM users WHERE id = $1", [userId]);
 
     if (result.rows.length === 0) {
       req.log.warn("Profile access attempt for non-existent user", { userId });
       return res.status(404).json({ error: "User not found" });
     }
 
-    const username = result.rows[0].username;
+    const { username, email, created_at } = result.rows[0];
     req.log.debug("User profile accessed", { userId });
 
-    res.status(200).json({ userId, username });
+    // res.set("Cache-Control", "no-store");
+    res.status(200).json({ user: { userId, username, email, created_at } });
   } catch (err) {
     req.log.error("User profile access failed", {
       error: err.message,
