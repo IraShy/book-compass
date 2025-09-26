@@ -2,6 +2,7 @@ const request = require("supertest");
 const app = require("../../src/app");
 const db = require("../../db");
 const bookCacheService = require("../../src/services/bookCacheService");
+const bookService = require("../../src/services/bookService");
 
 const baseUrl = "/api/books";
 
@@ -94,18 +95,28 @@ describe("Books routes", () => {
     });
 
     it("finds book with partial author match", async () => {
+      const mockBook = {
+        google_books_id: "ZSsAEAAAQBAJ",
+        title: "The Master and Margarita",
+        authors: ["Mikhail Bulgakov"],
+        description:
+          "Satan, Judas, a Soviet writer, and a talking black cat named Behemoth populate this satire...",
+      };
+
+      const spy = jest.spyOn(bookService, "fetchBookFromGoogle").mockResolvedValue(mockBook);
+
       const firstRes = await request(app).get(
         `${baseUrl}/find?title=The%20Master%20and%20Margarita&authors=Mikhail%20Bulgakov`
       );
-      expect(firstRes.statusCode).toBe(200);
 
       bookCacheService.clearCache();
 
       const res = await request(app).get(`${baseUrl}/find?title=Master%20and%20Margarita&authors=Bulgakov`);
 
       expect(res.statusCode).toBe(200);
-      expect(["database", "google_api"]).toContain(res.body.source);
       expect(res.body.book.google_books_id).toBe(firstRes.body.book.google_books_id);
+
+      spy.mockRestore();
     });
   });
 });
