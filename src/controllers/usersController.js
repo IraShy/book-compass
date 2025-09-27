@@ -1,6 +1,7 @@
 const bcrypt = require("bcrypt");
 const db = require("../../db");
 const { generateToken } = require("../services/authService");
+const { validateEmailUtil } = require("../utils/validation");
 
 require("dotenv").config();
 
@@ -138,9 +139,99 @@ async function viewUserProfile(req, res) {
   }
 }
 
+async function updateUserProfile(req, res) {
+  try {
+    const { userId } = req.user;
+
+    if (!userId) {
+      req.log.warn("Profile update attempt without authentication");
+      return res.status(401).json({ error: "Authentication required" });
+    }
+
+    const { username: rawUsername, email, password } = req.body;
+
+    req.log.debug(`Profile update request for userID: ${userId}`, {
+      rawUsername,
+      email,
+    });
+
+    // Find user in the db
+    const result = await db.query("SELECT * FROM users WHERE id = $1", [userId]);
+
+    if (result.rows.length === 0) {
+      req.log.warn("Profile update attempt for non-existent user", { userId });
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    const user = result.rows[0];
+    let normalizedEmail = user.email;
+
+    req.log.debug("Found user in the database for profile update", { user });
+
+    // Email update
+    if (email && email != user.email) {
+      const emailError = validateEmailUtil(email);
+      if (emailError) {
+        return res.status(400).json({ error: emailError });
+      }
+      // Verify password
+      if (!password) {
+        return res.status(401).json({ error: "Password is required to change email" });
+      }
+      const match = await bcrypt.compare(password, user.hashed_password);
+      if (!match) {
+        req.log.warn("Profile update attempt with incorrect password", {
+          userId,
+          email: user.email,
+        });
+        return res.status(401).json({ error: "Invalid credentials" });
+      }
+
+      req.log.info("Password verified for profile update", { userId });
+
+      // Check if email exists for another user
+      normalizedEmail = email.toLowerCase();
+      const emailOwner = await db.query("SELECT id FROM users WHERE email = $1 AND id != $2", [
+        normalizedEmail,
+        userId,
+      ]);
+
+      if (emailOwner.rows.length > 0) {
+        req.log.warn("Profile update attempt with email already in use", {
+          userId,
+          email: normalizedEmail,
+        });
+        return res.status(403).json({ error: "Unable to update email" });
+      }
+
+      req.log.debug("Email verified as unique for profile update", { userId, email: normalizedEmail });
+    }
+
+    // Update user in the db
+    const username = rawUsername?.trim() || user.username;
+    const updated_at = new Date();
+
+    const updated = await db.query(
+      "UPDATE users SET username = $1, email = $2, updated_at = $3 WHERE id = $4 RETURNING username, email, created_at, updated_at",
+      [username, normalizedEmail, updated_at, userId]
+    );
+
+    req.log.info("User profile updated successfully", { userId });
+    res.status(200).json({ user: { userId, ...updated.rows[0] } });
+  } catch (err) {
+    req.log.error("User profile update failed", {
+      error: err.message,
+      stack: err.stack,
+      userId: req.user?.userId,
+    });
+    res.status(500).json({ error: "Internal server error" });
+  }
+}
+
 module.exports = {
   registerUser,
   loginUser,
   logoutUser,
   viewUserProfile,
+  updateUserProfile,
 };

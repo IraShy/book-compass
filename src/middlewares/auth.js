@@ -57,6 +57,7 @@ const checkCredentialsPresence = (req, res, next) => {
 const validateEmailFormat = (req, res, next) => {
   const { email } = req.body;
   const errorMessage = validateEmailUtil(email);
+  req.log.debug("Validate email format middleware", { email });
 
   if (errorMessage) {
     req.log.warn(errorMessage, { email });
