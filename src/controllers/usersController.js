@@ -1,7 +1,9 @@
 const bcrypt = require("bcrypt");
 const db = require("../../db");
 const { generateToken } = require("../services/authService");
+const { NotFoundError } = require("../utils/errors");
 const { validateEmailUtil, validatePasswordUtil } = require("../utils/validation");
+const { findUserById } = require("../services/userService");
 
 require("dotenv").config();
 
@@ -118,19 +120,16 @@ async function viewUserProfile(req, res) {
       return res.status(401).json({ error: "Authentication required" });
     }
 
-    const result = await db.query("SELECT username, email, created_at FROM users WHERE id = $1", [userId]);
-
-    if (result.rows.length === 0) {
-      req.log.warn("Profile access attempt for non-existent user", { userId });
-      return res.status(404).json({ error: "User not found" });
-    }
-
-    const { username, email, created_at } = result.rows[0];
+    const { username, email, created_at } = await findUserById(userId);
     req.log.debug("User profile accessed", { userId });
 
-    // res.set("Cache-Control", "no-store");
     res.status(200).json({ user: { userId, username, email, created_at } });
   } catch (err) {
+    if (err instanceof NotFoundError) {
+      req.log.warn("User not found during profile update", { userId: req.user?.userId });
+      return res.status(err.statusCode).json({ error: err.message });
+    }
+
     req.log.error("User profile access failed", {
       error: err.message,
       userId: req.user?.userId,
@@ -155,15 +154,7 @@ async function updateUserProfile(req, res) {
       email,
     });
 
-    // Find user in the db
-    const result = await db.query("SELECT * FROM users WHERE id = $1", [userId]);
-
-    if (result.rows.length === 0) {
-      req.log.warn("Profile update attempt for non-existent user", { userId });
-      return res.status(404).json({ error: "User not found" });
-    }
-
-    const user = result.rows[0];
+    const user = await findUserById(userId);
     let normalizedEmail = user.email;
 
     req.log.debug("Found user in the database for profile update", { user });
@@ -219,6 +210,11 @@ async function updateUserProfile(req, res) {
     req.log.info("User profile updated successfully", { userId });
     res.status(200).json({ user: { userId, ...updated.rows[0] } });
   } catch (err) {
+    if (err instanceof NotFoundError) {
+      req.log.warn("User not found during profile update", { userId: req.user?.userId });
+      return res.status(err.statusCode).json({ error: err.message });
+    }
+
     req.log.error("User profile update failed", {
       error: err.message,
       stack: err.stack,
@@ -251,15 +247,7 @@ async function changePassword(req, res) {
       return res.status(400).json({ error: passwordError });
     }
 
-    // Find user in the db
-    const result = await db.query("SELECT * FROM users WHERE id = $1", [userId]);
-
-    if (result.rows.length === 0) {
-      req.log.warn("Password change attempt for non-existent user", { userId });
-      return res.status(404).json({ error: "User not found" });
-    }
-
-    const user = result.rows[0];
+    const user = await findUserById(userId);
 
     // Verify current password
     const match = await bcrypt.compare(currentPassword, user.hashed_password);
@@ -290,6 +278,11 @@ async function changePassword(req, res) {
     req.log.info("User password changed successfully", { userId });
     res.status(200).json({ message: "Password changed successfully" });
   } catch (err) {
+    if (err instanceof NotFoundError) {
+      req.log.warn("User not found during profile update", { userId: req.user?.userId });
+      return res.status(err.statusCode).json({ error: err.message });
+    }
+
     req.log.error("User password change failed", {
       error: err.message,
       stack: err.stack,
