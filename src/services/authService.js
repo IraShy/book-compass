@@ -1,4 +1,6 @@
 const jwt = require("jsonwebtoken");
+const bcrypt = require("bcrypt");
+const { UnauthorizedError } = require("../utils/errors");
 
 /**
  * Generate JWT token and set it as HTTP-only cookie
@@ -16,4 +18,11 @@ function generateToken(res, userId) {
   });
 }
 
-module.exports = { generateToken };
+async function verifyPassword(plainPassword, hashedPassword) {
+  const match = await bcrypt.compare(plainPassword, hashedPassword);
+  if (!match) {
+    throw new UnauthorizedError("Invalid credentials");
+  }
+}
+
+module.exports = { generateToken, verifyPassword };

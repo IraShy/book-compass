@@ -1,8 +1,8 @@
 const bcrypt = require("bcrypt");
 const db = require("../../db");
-const { NotFoundError } = require("../utils/errors");
+const { NotFoundError, UnauthorizedError } = require("../utils/errors");
 const { validateEmailUtil, validatePasswordUtil } = require("../utils/validation");
-const { generateToken } = require("../services/authService");
+const { generateToken, verifyPassword } = require("../services/authService");
 const { findUserById } = require("../services/userService");
 
 require("dotenv").config();
@@ -66,14 +66,7 @@ async function loginUser(req, res) {
       return res.status(401).json({ error: "Invalid credentials" });
     }
 
-    const match = await bcrypt.compare(password, user.hashed_password);
-    if (!match) {
-      req.log.warn("Login attempt with incorrect password", {
-        userId: user.id,
-        email: normalizedEmail,
-      });
-      return res.status(401).json({ error: "Invalid credentials" });
-    }
+    await verifyPassword(password, user.hashed_password);
 
     req.log.info("User logged in successfully", {
       userId: user.id,
@@ -86,6 +79,16 @@ async function loginUser(req, res) {
 
     res.status(200).json({ user: userWithoutPassword });
   } catch (err) {
+    if (err instanceof UnauthorizedError) {
+      req.log.warn("Login attempt with incorrect password", {
+        userId: req.body?.userId,
+        email: req.body?.email?.toLowerCase(),
+        error: err.message,
+        stack: err.stack,
+      });
+      return res.status(err.statusCode).json({ error: err.message });
+    }
+
     req.log.error("User login failed", {
       error: err.message,
       email: req.body.email?.toLowerCase(),
@@ -156,14 +159,8 @@ async function updateUserProfile(req, res) {
       if (!password) {
         return res.status(401).json({ error: "Password is required to change email" });
       }
-      const match = await bcrypt.compare(password, user.hashed_password);
-      if (!match) {
-        req.log.warn("Profile update attempt with incorrect password", {
-          userId,
-          email: user.email,
-        });
-        return res.status(401).json({ error: "Invalid credentials" });
-      }
+
+      await verifyPassword(password, user.hashed_password);
 
       req.log.info("Password verified for profile update", { userId });
 
@@ -202,6 +199,15 @@ async function updateUserProfile(req, res) {
       return res.status(err.statusCode).json({ error: err.message });
     }
 
+    if (err instanceof UnauthorizedError) {
+      req.log.warn("Profile update attempt with incorrect password", {
+        error: err.message,
+        userId: req.user?.userId,
+        stack: err.stack,
+      });
+      return res.status(err.statusCode).json({ error: err.message });
+    }
+
     req.log.error("User profile update failed", {
       error: err.message,
       stack: err.stack,
@@ -230,15 +236,7 @@ async function changePassword(req, res) {
 
     const user = await findUserById(userId);
 
-    // Verify current password
-    const match = await bcrypt.compare(currentPassword, user.hashed_password);
-    if (!match) {
-      req.log.warn("Password change attempt with incorrect current password", {
-        userId,
-        email: user.email,
-      });
-      return res.status(401).json({ error: "Invalid credentials" });
-    }
+    await verifyPassword(currentPassword, user.hashed_password);
 
     const samePassword = await bcrypt.compare(newPassword, user.hashed_password);
     if (samePassword) {
@@ -261,6 +259,15 @@ async function changePassword(req, res) {
   } catch (err) {
     if (err instanceof NotFoundError) {
       req.log.warn("User not found during profile update", { userId: req.user?.userId });
+      return res.status(err.statusCode).json({ error: err.message });
+    }
+
+    if (err instanceof UnauthorizedError) {
+      req.log.warn("Password change attempt with incorrect current password", {
+        error: err.message,
+        userId: req.user?.userId,
+        stack: err.stack,
+      });
       return res.status(err.statusCode).json({ error: err.message });
     }
 
