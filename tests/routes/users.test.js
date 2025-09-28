@@ -236,4 +236,191 @@ describe("User routes", () => {
       expect(res.body).toHaveProperty("error", "Authentication required");
     });
   });
+
+  describe("PUT /profile", () => {
+    let cookies;
+
+    beforeEach(async () => {
+      const registerRes = await registerUser({
+        email: "testuser@example.com",
+        username: "testuser",
+        password: "password123",
+      });
+      cookies = registerRes.headers["set-cookie"];
+    });
+
+    test("update username only", async () => {
+      const res = await request(app)
+        .put(`${baseUrl}/profile`)
+        .set("Cookie", cookies)
+        .send({ username: "newusername" });
+
+      expect(res.statusCode).toBe(200);
+      expect(res.body.user).toHaveProperty("username", "newusername");
+      expect(res.body.user).toHaveProperty("email", "testuser@example.com");
+    });
+
+    test("update email with correct password", async () => {
+      const res = await request(app).put(`${baseUrl}/profile`).set("Cookie", cookies).send({
+        email: "newemail@example.com",
+        password: "password123",
+      });
+
+      expect(res.statusCode).toBe(200);
+      expect(res.body.user).toHaveProperty("email", "newemail@example.com");
+    });
+
+    test("update email without password", async () => {
+      const res = await request(app)
+        .put(`${baseUrl}/profile`)
+        .set("Cookie", cookies)
+        .send({ email: "newemail@example.com" });
+
+      expect(res.statusCode).toBe(401);
+      expect(res.body).toHaveProperty("error", "Password is required to change email");
+    });
+
+    test("update email with wrong password", async () => {
+      const res = await request(app).put(`${baseUrl}/profile`).set("Cookie", cookies).send({
+        email: "newemail@example.com",
+        password: "wrongpassword",
+      });
+
+      expect(res.statusCode).toBe(401);
+      expect(res.body).toHaveProperty("error", "Invalid credentials");
+    });
+
+    test("update email with invalid format", async () => {
+      const res = await request(app).put(`${baseUrl}/profile`).set("Cookie", cookies).send({
+        email: "invalidemail",
+        password: "password123",
+      });
+
+      expect(res.statusCode).toBe(400);
+      expect(res.body).toHaveProperty("error", "Invalid email format");
+    });
+
+    test("update email to existing email", async () => {
+      await registerUser({
+        email: "existing@example.com",
+        password: "password123",
+      });
+
+      const res = await request(app).put(`${baseUrl}/profile`).set("Cookie", cookies).send({
+        email: "existing@example.com",
+        password: "password123",
+      });
+
+      expect(res.statusCode).toBe(403);
+      expect(res.body).toHaveProperty("error", "Unable to update email");
+    });
+
+    test("update both username and email", async () => {
+      const res = await request(app).put(`${baseUrl}/profile`).set("Cookie", cookies).send({
+        username: "newusername",
+        email: "newemail@example.com",
+        password: "password123",
+      });
+
+      expect(res.statusCode).toBe(200);
+      expect(res.body.user).toHaveProperty("username", "newusername");
+      expect(res.body.user).toHaveProperty("email", "newemail@example.com");
+    });
+
+    test("update without authentication", async () => {
+      const res = await request(app).put(`${baseUrl}/profile`).send({ username: "newusername" });
+
+      expect(res.statusCode).toBe(401);
+      expect(res.body).toHaveProperty("error", "Authentication required");
+    });
+  });
+
+  describe("PUT /password", () => {
+    let cookies;
+
+    beforeEach(async () => {
+      const registerRes = await registerUser({
+        email: "testuser@example.com",
+        password: "password123",
+      });
+      cookies = registerRes.headers["set-cookie"];
+    });
+
+    test("change password with valid data", async () => {
+      const res = await request(app).put(`${baseUrl}/password`).set("Cookie", cookies).send({
+        currentPassword: "password123",
+        newPassword: "newpassword123",
+      });
+
+      expect(res.statusCode).toBe(200);
+      expect(res.body).toHaveProperty("message", "Password changed successfully");
+
+      // Verify can login with new password
+      const loginRes = await loginUser({
+        email: "testuser@example.com",
+        password: "newpassword123",
+      });
+      expect(loginRes.statusCode).toBe(200);
+    });
+
+    test("change password with wrong current password", async () => {
+      const res = await request(app).put(`${baseUrl}/password`).set("Cookie", cookies).send({
+        currentPassword: "wrongpassword",
+        newPassword: "newpassword123",
+      });
+
+      expect(res.statusCode).toBe(401);
+      expect(res.body).toHaveProperty("error", "Invalid credentials");
+    });
+
+    test("change password with same password", async () => {
+      const res = await request(app).put(`${baseUrl}/password`).set("Cookie", cookies).send({
+        currentPassword: "password123",
+        newPassword: "password123",
+      });
+
+      expect(res.statusCode).toBe(400);
+      expect(res.body).toHaveProperty("error", "New password must be different from current password");
+    });
+
+    test("change password with invalid new password", async () => {
+      const res = await request(app).put(`${baseUrl}/password`).set("Cookie", cookies).send({
+        currentPassword: "password123",
+        newPassword: "short",
+      });
+
+      expect(res.statusCode).toBe(400);
+      expect(res.body).toHaveProperty("error", "Password must be between 8 and 64 characters long");
+    });
+
+    test("change password without current password", async () => {
+      const res = await request(app)
+        .put(`${baseUrl}/password`)
+        .set("Cookie", cookies)
+        .send({ newPassword: "newpassword123" });
+
+      expect(res.statusCode).toBe(400);
+      expect(res.body).toHaveProperty("error", "Current and new passwords are required");
+    });
+
+    test("change password without new password", async () => {
+      const res = await request(app)
+        .put(`${baseUrl}/password`)
+        .set("Cookie", cookies)
+        .send({ currentPassword: "password123" });
+
+      expect(res.statusCode).toBe(400);
+      expect(res.body).toHaveProperty("error", "Current and new passwords are required");
+    });
+
+    test("change password without authentication", async () => {
+      const res = await request(app).put(`${baseUrl}/password`).send({
+        currentPassword: "password123",
+        newPassword: "newpassword123",
+      });
+
+      expect(res.statusCode).toBe(401);
+      expect(res.body).toHaveProperty("error", "Authentication required");
+    });
+  });
 });
