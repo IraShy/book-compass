@@ -1,7 +1,7 @@
 const bcrypt = require("bcrypt");
 const db = require("../../db");
 const { generateToken } = require("../services/authService");
-const { validateEmailUtil } = require("../utils/validation");
+const { validateEmailUtil, validatePasswordUtil } = require("../utils/validation");
 
 require("dotenv").config();
 
@@ -228,10 +228,82 @@ async function updateUserProfile(req, res) {
   }
 }
 
+async function changePassword(req, res) {
+  try {
+    const { userId } = req.user;
+
+    if (!userId) {
+      req.log.warn("Password change attempt without authentication");
+      return res.status(401).json({ error: "Authentication required" });
+    }
+
+    const { currentPassword, newPassword } = req.body;
+
+    req.log.debug(`Password change request for userID: ${userId}`);
+
+    if (!currentPassword || !newPassword) {
+      req.log.warn("Password change attempt with missing fields", { userId });
+      return res.status(400).json({ error: "Current and new passwords are required" });
+    }
+
+    const passwordError = validatePasswordUtil(newPassword);
+    if (passwordError) {
+      return res.status(400).json({ error: passwordError });
+    }
+
+    // Find user in the db
+    const result = await db.query("SELECT * FROM users WHERE id = $1", [userId]);
+
+    if (result.rows.length === 0) {
+      req.log.warn("Password change attempt for non-existent user", { userId });
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    const user = result.rows[0];
+
+    // Verify current password
+    const match = await bcrypt.compare(currentPassword, user.hashed_password);
+    if (!match) {
+      req.log.warn("Password change attempt with incorrect current password", {
+        userId,
+        email: user.email,
+      });
+      return res.status(401).json({ error: "Invalid credentials" });
+    }
+
+    const samePassword = await bcrypt.compare(newPassword, user.hashed_password);
+    if (samePassword) {
+      return res.status(400).json({ error: "New password must be different from current password" });
+    }
+
+    req.log.info("Current password verified for password change", { userId });
+
+    const hashed = await bcrypt.hash(newPassword, 10);
+    const updated_at = new Date();
+
+    await db.query("UPDATE users SET hashed_password = $1, updated_at = $2 WHERE id = $3", [
+      hashed,
+      updated_at,
+      userId,
+    ]);
+
+    req.log.info("User password changed successfully", { userId });
+    res.status(200).json({ message: "Password changed successfully" });
+  } catch (err) {
+    req.log.error("User password change failed", {
+      error: err.message,
+      stack: err.stack,
+      userId: req.user?.userId,
+    });
+    res.status(500).json({ error: "Internal server error" });
+  }
+}
+
 module.exports = {
   registerUser,
   loginUser,
   logoutUser,
   viewUserProfile,
   updateUserProfile,
+  changePassword,
 };

@@ -12,6 +12,7 @@ const {
   viewUserProfile,
   logoutUser,
   updateUserProfile,
+  changePassword,
 } = require("../controllers/usersController");
 
 const router = express.Router();
@@ -25,5 +26,7 @@ router.post("/logout", authenticateToken, logoutUser);
 router.get("/profile", authenticateToken, viewUserProfile);
 
 router.put("/profile", authenticateToken, updateUserProfile);
+
+router.put("/password", authenticateToken, changePassword);
 
 module.exports = router;
