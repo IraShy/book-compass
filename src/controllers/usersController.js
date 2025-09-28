@@ -1,8 +1,8 @@
 const bcrypt = require("bcrypt");
 const db = require("../../db");
-const { generateToken } = require("../services/authService");
 const { NotFoundError } = require("../utils/errors");
 const { validateEmailUtil, validatePasswordUtil } = require("../utils/validation");
+const { generateToken } = require("../services/authService");
 const { findUserById } = require("../services/userService");
 
 require("dotenv").config();
@@ -113,13 +113,6 @@ async function logoutUser(req, res) {
 async function viewUserProfile(req, res) {
   try {
     const userId = req.user.userId;
-    req.log.debug(`userID: ${userId}`);
-
-    if (!userId) {
-      req.log.warn("Profile access attempt without authentication");
-      return res.status(401).json({ error: "Authentication required" });
-    }
-
     const { username, email, created_at } = await findUserById(userId);
     req.log.debug("User profile accessed", { userId });
 
@@ -141,12 +134,6 @@ async function viewUserProfile(req, res) {
 async function updateUserProfile(req, res) {
   try {
     const { userId } = req.user;
-
-    if (!userId) {
-      req.log.warn("Profile update attempt without authentication");
-      return res.status(401).json({ error: "Authentication required" });
-    }
-
     const { username: rawUsername, email, password } = req.body;
 
     req.log.debug(`Profile update request for userID: ${userId}`, {
@@ -227,12 +214,6 @@ async function updateUserProfile(req, res) {
 async function changePassword(req, res) {
   try {
     const { userId } = req.user;
-
-    if (!userId) {
-      req.log.warn("Password change attempt without authentication");
-      return res.status(401).json({ error: "Authentication required" });
-    }
-
     const { currentPassword, newPassword } = req.body;
 
     req.log.debug(`Password change request for userID: ${userId}`);

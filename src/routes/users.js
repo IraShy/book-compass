@@ -5,6 +5,7 @@ const {
   checkCredentialsPresence,
   validateEmailFormat,
   validatePasswordFormat,
+  requireAuth,
 } = require("../middlewares/auth");
 const {
   registerUser,
@@ -23,10 +24,10 @@ router.post("/login", checkCredentialsPresence, validateEmailFormat, loginUser);
 
 router.post("/logout", authenticateToken, logoutUser);
 
-router.get("/profile", authenticateToken, viewUserProfile);
+router.get("/profile", authenticateToken, requireAuth, viewUserProfile);
 
-router.put("/profile", authenticateToken, updateUserProfile);
+router.put("/profile", authenticateToken, requireAuth, updateUserProfile);
 
-router.put("/password", authenticateToken, changePassword);
+router.put("/password", authenticateToken, requireAuth, changePassword);
 
 module.exports = router;

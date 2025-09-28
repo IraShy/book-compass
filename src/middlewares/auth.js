@@ -81,9 +81,18 @@ const validatePasswordFormat = (req, res, next) => {
   next();
 };
 
+const requireAuth = (req, res, next) => {
+  if (!req.user?.userId) {
+    req.log.warn("Request without authentication");
+    return res.status(401).json({ error: "Authentication required" });
+  }
+  next();
+};
+
 module.exports = {
   authenticateToken,
   checkCredentialsPresence,
   validateEmailFormat,
   validatePasswordFormat,
+  requireAuth,
 };
