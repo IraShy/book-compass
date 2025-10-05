@@ -28,8 +28,50 @@ app.use("/api/reviews", reviewsRoutes);
 app.use("/api/recommendations", recommendationsRoutes);
 
 // Health check route (for testing server)
-app.get("/api/health", (req, res) => {
-  res.json({ status: "Book Compass backend is running" });
+app.get("/api/health", async (req, res) => {
+  const start = Date.now();
+  const services = {};
+
+  // DB check
+  try {
+    await db.query("SELECT 1;");
+    services.db = "ok";
+  } catch (err) {
+    services.db = "error";
+    req.log.error("Health check: DB connectivity failed", { error: err.message });
+  }
+
+  // Google Book API check
+  try {
+    const response = await fetch("https://www.googleapis.com/books/v1/volumes?q=test&maxResults=1");
+    services.googleBooks = response.ok ? "ok" : "error";
+  } catch (err) {
+    services.googleBooks = "error";
+    req.log.error("Health check: Google Books API failed", { error: err.message });
+  }
+
+  // Gemini check
+  services.gemini = process.env.GEMINI_API_KEY ? "ok" : "error";
+
+  const latency = Date.now() - start;
+
+  // Determine overall status
+  const criticalServices = ["db", "googleBooks", "gemini"];
+  const hasCriticalFailure = criticalServices.some((service) => services[service] === "error");
+  const hasAnyFailure = Object.values(services).includes("error");
+
+  const health = {
+    status: hasCriticalFailure ? "unhealthy" : hasAnyFailure ? "degraded" : "healthy",
+    services,
+    latency_ms: latency,
+    timestamp: new Date().toISOString(),
+  };
+
+  if (health.status !== "healthy") {
+    req.log.warn("Health degradation detected", health);
+  }
+
+  res.json(health);
 });
 
 // Test route to check DB connection
