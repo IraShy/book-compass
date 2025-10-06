@@ -20,7 +20,8 @@ function normalizeString(str) {
 
 function createCacheKey(title, authors) {
   const normalizedTitle = normalizeString(title);
-  const normalizedAuthors = authors.map(normalizeString).filter(Boolean).sort();
+  const authorsArray = Array.isArray(authors) ? authors : [authors];
+  const normalizedAuthors = authorsArray.map(normalizeString).filter(Boolean).sort();
   return `${normalizedTitle}|${normalizedAuthors.join("|")}`;
 }
 

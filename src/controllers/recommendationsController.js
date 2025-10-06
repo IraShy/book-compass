@@ -61,6 +61,7 @@ async function generateRecommendations(req, res) {
     const llmStart = Date.now();
     const rawResult = await getRecommendations(reviewsResult.rows);
     const recommendations = parseAIResponse(rawResult);
+    req.log.debug("LLM response:", { rawResult, recommendations });
     const llmTime = Date.now() - llmStart;
     req.log.info(`LLM call took: ${llmTime}ms`);
 
@@ -78,6 +79,7 @@ async function generateRecommendations(req, res) {
         const bookStartTime = Date.now();
         try {
           let recommendedBook = getCachedBook(rec.title, rec.authors);
+          const authorsArray = Array.isArray(rec.authors) ? rec.authors : rec.authors.split(", ");
 
           if (recommendedBook) {
             req.log.info(`Cache hit for "${rec.title}"`);
@@ -89,7 +91,7 @@ async function generateRecommendations(req, res) {
               `SELECT google_books_id, title, authors, description 
                FROM books 
                WHERE title = $1 AND authors @> $2`,
-              [rec.title, Array.isArray(rec.authors) ? rec.authors : rec.authors.split(", ")]
+              [rec.title, authorsArray]
             );
 
             if (dbResult.rows.length > 0) {
@@ -100,9 +102,11 @@ async function generateRecommendations(req, res) {
               return { ...rec, bookId: recommendedBook.google_books_id };
             } else {
               const apiStart = Date.now();
-              recommendedBook = await fetchBookFromGoogle(rec.title, rec.authors);
+              recommendedBook = await fetchBookFromGoogle(rec.title, authorsArray);
               const apiTime = Date.now() - apiStart;
-              req.log.info(`Google Books API call for "${rec.title}" took: ${apiTime}ms`);
+              req.log.info(`Google Books API call for "${rec.title}" took: ${apiTime}ms`, {
+                recommendedBook,
+              });
 
               if (recommendedBook) {
                 setCachedBook(rec.title, rec.authors, recommendedBook);
@@ -139,6 +143,7 @@ async function generateRecommendations(req, res) {
 
     const bookTime = Date.now() - bookStart;
     req.log.info(`All book processing took: ${bookTime}ms`);
+    req.log.debug("Processed recommendations:", processedRecommendations);
 
     const validRecommendations = processedRecommendations.filter((rec) => rec !== null);
 
@@ -150,8 +155,10 @@ async function generateRecommendations(req, res) {
         validRecommendations.forEach((rec, index) => {
           const offset = index * 3;
           placeholders.push(`($${offset + 1}, $${offset + 2}, $${offset + 3})`);
-          values.push(userId, rec.google_books_id, rec.reason);
+          values.push(userId, rec.bookId, rec.reason);
         });
+
+        req.log.debug("Inserting suggestions into database", { placeholders, values });
 
         await db.query(
           `INSERT INTO suggestions (user_id, book_id, reason) 

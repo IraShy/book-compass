@@ -15,7 +15,10 @@ async function getRecommendations(userReviews) {
 
 function buildPrompt(reviews) {
   const reviewText = reviews
-    .map((r) => `"${r.title}" by ${r.authors.join(", ")} (${r.rating}/10): ${r.content}`)
+    .map((r) => {
+      const authors = Array.isArray(r.authors) ? r.authors.join(", ") : r.authors;
+      return `"${r.title}" by ${authors} (${r.rating}/10): ${r.content}`;
+    })
     .join("\n");
 
   return `You are a book recommendation expert. Based on the provided reviews, suggest 3 different books that I would enjoy. The suggestions must be NEW and should NOT include any of the books mentioned below.
