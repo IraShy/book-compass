@@ -120,5 +120,3 @@ describe("Books routes", () => {
     });
   });
 });
-
-expect(false).toBe(true);
