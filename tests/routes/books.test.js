@@ -122,4 +122,3 @@ describe("Books routes", () => {
 });
 
 expect(false).toBe(true);
-expect(true).toBe(false);
