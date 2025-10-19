@@ -51,7 +51,14 @@ app.get("/api/health", async (req, res) => {
   }
 
   // Gemini check
-  services.gemini = process.env.GEMINI_API_KEY ? "ok" : "error";
+  // services.gemini = process.env.GEMINI_API_KEY ? "ok" : "error";
+  const geminiKey = process.env.GEMINI_API_KEY;
+  req.log.info("Gemini API key check", {
+    exists: !!geminiKey,
+    length: geminiKey?.length || 0,
+    firstChars: geminiKey?.substring(0, 10) || "undefined",
+  });
+  services.gemini = geminiKey && geminiKey.trim().length > 0 ? "ok" : "error";
 
   const latency = Date.now() - start;
 
