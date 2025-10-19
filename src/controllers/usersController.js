@@ -280,6 +280,51 @@ async function changePassword(req, res) {
   }
 }
 
+async function deleteUserAccount(req, res) {
+  req.log.debug("Delete user account request received", { userId: req.user?.userId });
+
+  try {
+    const { userId } = req.user;
+    const { password } = req.body;
+
+    if (!password) {
+      req.log.warn("User account deletion attempt with missing password", { userId });
+      return res.status(400).json({ error: "Password is required" });
+    }
+
+    const user = await findUserById(userId);
+
+    await verifyPassword(password, user.hashed_password);
+
+    req.log.info("Password verified for account deletion", { userId });
+    await db.query("DELETE FROM users WHERE id = $1", [userId]);
+    res.clearCookie("authToken");
+    req.log.info("User account deleted successfully", { userId });
+    res.status(204).send();
+  } catch (err) {
+    if (err instanceof NotFoundError) {
+      req.log.warn("User not found during profile update", { userId: req.user?.userId });
+      return res.status(err.statusCode).json({ error: err.message });
+    }
+
+    if (err instanceof UnauthorizedError) {
+      req.log.warn("User account deletion attempt with incorrect password", {
+        error: err.message,
+        userId: req.user?.userId,
+        stack: err.stack,
+      });
+      return res.status(err.statusCode).json({ error: "Incorrect password" });
+    }
+
+    req.log.error("User account deletion failed", {
+      error: err.message,
+      stack: err.stack,
+      userId: req.user?.userId,
+    });
+    res.status(500).json({ error: "Account deletion failed" });
+  }
+}
+
 module.exports = {
   registerUser,
   loginUser,
@@ -287,4 +332,5 @@ module.exports = {
   viewUserProfile,
   updateUserProfile,
   changePassword,
+  deleteUserAccount,
 };

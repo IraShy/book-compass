@@ -423,4 +423,98 @@ describe("User routes", () => {
       expect(res.body).toHaveProperty("error", "Authentication required");
     });
   });
+
+  describe("DELETE /profile", () => {
+    let cookies;
+
+    beforeEach(async () => {
+      const registerRes = await registerUser({
+        email: "testuser@example.com",
+        password: "password123",
+      });
+      cookies = registerRes.headers["set-cookie"];
+    });
+
+    test("delete account with correct password", async () => {
+      const res = await request(app)
+        .delete(`${baseUrl}/profile`)
+        .set("Cookie", cookies)
+        .send({ password: "password123" });
+
+      expect(res.statusCode).toBe(204);
+      expect(res.headers["set-cookie"]).toBeDefined();
+      expect(res.headers["set-cookie"][0]).toMatch(/authToken=;/);
+
+      // Verify user is deleted from database
+      const user = await db.query("SELECT * FROM users WHERE email = 'testuser@example.com'");
+      expect(user.rows).toHaveLength(0);
+    });
+
+    test("delete account with incorrect password", async () => {
+      const res = await request(app)
+        .delete(`${baseUrl}/profile`)
+        .set("Cookie", cookies)
+        .send({ password: "wrongpassword" });
+
+      expect(res.statusCode).toBe(401);
+      expect(res.body).toHaveProperty("error", "Incorrect password");
+
+      // Verify user still exists
+      const user = await db.query("SELECT * FROM users WHERE email = 'testuser@example.com'");
+      expect(user.rows).toHaveLength(1);
+    });
+
+    test("delete account without password", async () => {
+      const res = await request(app).delete(`${baseUrl}/profile`).set("Cookie", cookies).send({});
+
+      expect(res.statusCode).toBe(400);
+      expect(res.body).toHaveProperty("error", "Password is required");
+
+      // Verify user still exists
+      const user = await db.query("SELECT * FROM users WHERE email = 'testuser@example.com'");
+      expect(user.rows).toHaveLength(1);
+    });
+
+    test("delete account without authentication", async () => {
+      const res = await request(app).delete(`${baseUrl}/profile`).send({ password: "password123" });
+
+      expect(res.statusCode).toBe(401);
+      expect(res.body).toHaveProperty("error", "Authentication required");
+    });
+
+    test("cascade deletion of user data", async () => {
+      // Get user ID from existing user
+      const userProfile = await request(app).get(`${baseUrl}/profile`).set("Cookie", cookies);
+      const userId = userProfile.body.user.userId;
+
+      // Add a book and a review
+      await db.query("INSERT INTO books (google_books_id, title, authors) VALUES ($1, $2, $3)", [
+        "test-book-id",
+        "Test Book",
+        ["Test Author"],
+      ]);
+
+      await db.query("INSERT INTO reviews (user_id, book_id, rating, content) VALUES ($1, $2, $3, $4)", [
+        userId,
+        "test-book-id",
+        5,
+        "Great book!",
+      ]);
+
+      // Delete account
+      const deleteRes = await request(app)
+        .delete(`${baseUrl}/profile`)
+        .set("Cookie", cookies)
+        .send({ password: "password123" });
+
+      expect(deleteRes.statusCode).toBe(204);
+
+      // Verify user and related data are deleted
+      const user = await db.query("SELECT * FROM users WHERE email = 'testuser@example.com'");
+      expect(user.rows).toHaveLength(0);
+
+      const reviews = await db.query("SELECT * FROM reviews WHERE user_id = $1", [userId]);
+      expect(reviews.rows).toHaveLength(0);
+    });
+  });
 });

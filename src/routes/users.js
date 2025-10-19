@@ -14,6 +14,7 @@ const {
   logoutUser,
   updateUserProfile,
   changePassword,
+  deleteUserAccount,
 } = require("../controllers/usersController");
 
 const router = express.Router();
@@ -29,5 +30,7 @@ router.get("/profile", authenticateToken, requireAuth, viewUserProfile);
 router.put("/profile", authenticateToken, requireAuth, updateUserProfile);
 
 router.put("/password", authenticateToken, requireAuth, changePassword);
+
+router.delete("/profile", authenticateToken, requireAuth, deleteUserAccount);
 
 module.exports = router;
