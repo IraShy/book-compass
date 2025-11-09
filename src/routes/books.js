@@ -1,6 +1,6 @@
 const express = require("express");
 const { decodeSearchParams } = require("../middlewares/bookParams");
-const { findOrAddBook } = require("../controllers/booksController");
+const { findOrAddBook, getBookById } = require("../controllers/booksController");
 
 const router = express.Router();
 
@@ -10,5 +10,7 @@ const router = express.Router();
  * @access Public
  */
 router.get("/find", decodeSearchParams, findOrAddBook);
+
+router.get("/:id", getBookById);
 
 module.exports = router;
