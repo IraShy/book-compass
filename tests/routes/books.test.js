@@ -26,10 +26,6 @@ afterAll(async () => {
 
 describe("Books routes", () => {
   describe("GET /books/find", () => {
-    afterEach(async () => {
-      await db.query("DELETE FROM books");
-    });
-
     it("returns a book from Google Books if not in db", async () => {
       const res = await request(app).get(`${baseUrl}/find?title=The%20Dressmaker&authors=Rosalie%20Ham`);
       expect(res.statusCode).toBe(200);
@@ -115,6 +111,41 @@ describe("Books routes", () => {
 
       expect(res.statusCode).toBe(200);
       expect(res.body.book.google_books_id).toBe(firstRes.body.book.google_books_id);
+
+      spy.mockRestore();
+    });
+  });
+
+  describe("GET /books/:id", () => {
+    it("returns a book by ID from database", async () => {
+      // Add a book to the database
+      const findRes = await request(app).get(`${baseUrl}/find?title=The%20Dressmaker&authors=Rosalie%20Ham`);
+      const bookId = findRes.body.book.google_books_id;
+
+      // Fetch the added book by ID
+      const res = await request(app).get(`${baseUrl}/${bookId}`);
+
+      expect(res.statusCode).toBe(200);
+      expect(res.body.google_books_id).toBe(bookId);
+      expect(res.body.title).toBe("The Dressmaker");
+      expect(res.body.authors).toContain("Rosalie Ham");
+    });
+
+    it("returns 404 if book ID not found", async () => {
+      const res = await request(app).get(`${baseUrl}/nonexistent-id`);
+
+      expect(res.statusCode).toBe(404);
+      expect(res.body).toHaveProperty("error", "Book not found");
+    });
+
+    it("handles database errors gracefully", async () => {
+      // Mock a database error
+      const spy = jest.spyOn(db, "query").mockRejectedValue(new Error("Test DB error"));
+
+      const res = await request(app).get(`${baseUrl}/some-id`);
+
+      expect(res.statusCode).toBe(500);
+      expect(res.body).toHaveProperty("error", "Failed to fetch book");
 
       spy.mockRestore();
     });

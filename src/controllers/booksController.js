@@ -1,3 +1,4 @@
+const db = require("../../db");
 const { getCachedBook, setCachedBook } = require("../services/bookCacheService");
 const { fetchBookFromGoogle, findBookInDatabase, saveBookToDatabase } = require("../services/bookService");
 
@@ -70,4 +71,22 @@ async function findOrAddBook(req, res) {
   }
 }
 
-module.exports = { findOrAddBook };
+async function getBookById(req, res) {
+  const { id } = req.params;
+
+  try {
+    const result = await db.query("SELECT * FROM books WHERE google_books_id = $1", [id]);
+
+    if (result.rows.length === 0 || !result.rows[0]) {
+      req.log.warn("Book not found in database by id", { id });
+      return res.status(404).json({ error: "Book not found" });
+    }
+
+    return res.status(200).json(result.rows[0]);
+  } catch (err) {
+    req.log.error("Database error fetching book by id", { error: err.message, id, stack: err.stack });
+    return res.status(500).json({ error: "Failed to fetch book" });
+  }
+}
+
+module.exports = { findOrAddBook, getBookById };
