@@ -3,16 +3,43 @@
 > **Work in progress** - Core features are functional but the project is actively being developed and
 > enhanced.
 
-A RESTful API for personalised book recommendations powered by AI. Users can manage their book reviews and
-receive book suggestions based on their reading preferences.
+## Project Overview
+
+Book Compass (backend) is a RESTful API service for personalised book recommendations. Users can create and
+manage book reviews, and the system uses Google's Gemini AI to generate book suggestions based on their
+reading history and preferences.
+
+### Use Cases
+
+- Create and manage book reviews with ratings (1-10 scale)
+- Generate AI-powered book recommendations based on review history
+- Search for books using Google Books API
+- Manage user accounts with secure authentication
+- Track reading history and preferences
 
 ## Features
 
-- **User Authentication** - Secure JWT-based registration and login
-- **Book Management** - Search and add books via Google Books API
-- **Review System** - Create, read, update, and delete book reviews
-- **AI Recommendations** - Get personalised book suggestions using Google Gemini AI
-- **Private Experience** - Each user's reviews and recommendations are completely isolated
+### Core Functionality
+
+- **User Authentication & Management**: secure JWT-based registration, login, logout, and session management
+- **Profile Control**: update username, email, change password, and delete account
+- **User Privacy**: each user's data is isolated - reviews and recommendations are private and not shared
+  between users
+- **Book Discovery**: search and retrieve books via Google Books API integration, with LRU caching for
+  performance
+- **Review System**: create, read, update, and delete book reviews with ratings (1-10 scale)
+- **AI-Powered Recommendations**: generate personalised book suggestions using Google Gemini AI based on
+  review analysis
+- **Recommendation History**: view and manage all your AI-generated book suggestions with explanations
+
+### Technical Features
+
+- **Book Caching**: LRU cache system for optimised book data retrieval
+- **Database Management**: automated schema setup and seeding for development and testing
+- **Health Monitoring**: health checks for database, Google Books API, and Gemini AI services
+- **Logging**: Winston-based structured logging with request tracking and error monitoring
+- **Data Validation & Security**: input validation, SQL injection prevention, and secure password handling
+- **Private User Experience**: complete data isolation between users with no cross-user data sharing
 
 ## Table of Contents
 
@@ -27,7 +54,7 @@ receive book suggestions based on their reading preferences.
 
 ## Links
 
-**API Base URL:** https://book-compass.onrender.com/api
+**Frontend repo** https://github.com/IraShy/book-compass-client
 
 **Quick Test:**
 
@@ -36,46 +63,56 @@ receive book suggestions based on their reading preferences.
 
 ## Available Endpoints
 
-### Authentication
+### Authentication & User Management
 
-- `POST /users/register` - Register a new user
+- `POST /users/register` - Register a new user account
 - `POST /users/login` - User login
-- `GET /users/profile` - Get user profile
+- `POST /users/logout` - User logout
+- `GET /users/profile` - Get current user profile information
+- `PUT /users/profile` - Update user profile (username, email with password verification)
+- `PUT /users/password` - Change user password (requires current password)
+- `DELETE /users/profile` - Delete user account (requires password confirmation)
 
 ### Books
 
-- `GET /books/find` - Find or add a book from Google Books API
+- `GET /books/find` - Search and retrieve books by title and authors
+- `GET /books/:id` - Get detailed information for a specific book by ID
 
 ### Reviews
 
-- `POST /reviews` - Create a new review
+- `POST /reviews` - Create a new book review (rating 1-10, content up to 2000 characters)
 - `GET /reviews/:bookId` - Get user's review for a specific book
 - `GET /reviews` - Get all user's reviews
 - `PUT /reviews/:reviewId` - Update an existing review
-- `DELETE /reviews/:reviewId` - Delete an existing review
+- `DELETE /reviews/:reviewId` - Delete a review permanently
 
 ### AI Recommendations
 
-- `POST /recommendations/generate` - Generate personalised book recommendations based on user's reviews
-- `GET /recommendations` - Get all user's recommendations
+- `POST /recommendations/generate` - Generate personalised book recommendations using Gemini AI (requires
+  minimum 3 reviews)
+- `GET /recommendations` - Get all user's recommendation history with reasons and book details
+
+### System Health & Monitoring
+
+- `GET /api/health` - Health check (database, Google Books API, Gemini AI status)
+- `GET /ping-db` - Database connectivity test with schema validation
 
 ## Tech Stack
 
-**Backend:**
-
-- Node.js 23.7.0 with Express.js
-- PostgreSQL (Docker for dev, Supabase for production)
-- JWT authentication with bcrypt password hashing
-- Google Gemini AI for book recommendations
-- Google Books API integration
+- Node.js 23.7.0 with Express.js framework
+- PostgreSQL
+- JWT (JSON Web Tokens)
+- bcrypt
+- Google Gemini AI (gemini-2.0-flash-lite)
+- Google Books API
+- LRU caching system
 - Winston logging
 - Jest testing framework with Supertest
-
-**DevOps:**
-
-- Docker containerisation
-- CI/CD pipeline with GitHub Actions and Render
-- Code quality tools: ESLint, Prettier, Husky pre-commit hooks
+- Docker
+- Supabase
+- Render cloud deployment
+- GitHub Actions CI/CD pipeline
+- Code quality enforcement: ESLint, Prettier, Husky pre-commit hooks
 
 ## Prerequisites
 
@@ -177,8 +214,9 @@ npm run seed
 The seed script creates:
 
 - **Test users**: `alice@example.com` and `bob@example.com` (password: `password123`)
-- **Sample books**: Fetched from Google Books API with real IDs
-- **Detailed reviews**: Meaningful reviews that help test AI recommendations
+- **Sample books**: Fetched from Google Books API with real book IDs and metadata
+- **Sample reviews**: Varied reviews for testing AI recommendation functionality
+- **Realistic data**: Simulates actual user behavior patterns for comprehensive testing
 
 ### Database Management
 
@@ -215,25 +253,29 @@ npm run dev
 
 The server will start on port 8000 with auto-reload enabled.
 
-### Code Quality
+### Code Quality & Standards
 
-The project includes automated code quality tools:
+The project enforces code quality standards through automated tools:
 
 ```bash
-# Format code
+# Format code with Prettier
 npm run format
 
-# Check formatting
+# Check code formatting
 npm run format:check
 
-# Lint code
+# Run ESLint checks
 npm run lint:check
 
 # Auto-fix linting issues
 npm run lint
 ```
 
-**Pre-commit hooks** automatically run linting and tests before each commit to ensure code quality.
+**Automated Quality Enforcement:**
+
+- **Pre-commit hooks** (Husky) automatically run linting, formatting, and tests before each commit
+- **Lint-staged** ensures only staged files are processed for faster commits
+- **CI/CD pipeline** runs full quality checks on every push and pull request
 
 **Skip hooks for documentation, config changes, etc.:**
 
